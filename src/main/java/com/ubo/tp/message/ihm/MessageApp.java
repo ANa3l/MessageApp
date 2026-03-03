@@ -72,7 +72,7 @@ public class MessageApp extends JFrame {
         this.initGui();
 
         // Initialisation du répertoire d'échange
-        //this.initDirectory();
+        this.initDirectory();
     }
 
     /**
