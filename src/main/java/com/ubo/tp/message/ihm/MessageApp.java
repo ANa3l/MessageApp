@@ -1,22 +1,16 @@
 package main.java.com.ubo.tp.message.ihm;
 
 import java.io.File;
-import java.io.InputStream;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import main.java.com.ubo.tp.message.core.DataManager;
-
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
+import main.java.com.ubo.tp.message.core.session.Session;
 
 /**
  * Classe principale l'application.
@@ -34,6 +28,11 @@ public class MessageApp extends JFrame {
      */
     protected MessageAppMainView mMainView;
 
+    /**
+     * Session de l'application.
+     */
+    protected Session mSession;
+    
     /**
      * Constructeur.
      *
@@ -108,7 +107,8 @@ public class MessageApp extends JFrame {
         setJMenuBar(new MessageAppMenuBar(this));
 
         // Création de la vue principale
-        this.mMainView = new MessageAppMainView(this.mDataManager);
+        this.mSession = new Session();
+        mMainView = new MessageAppMainView(mDataManager, mSession);
         setContentPane(this.mMainView);
 
         // Configuration de la fenêtre
