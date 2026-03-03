@@ -168,13 +168,14 @@ public class MessageApp extends JFrame {
                 initDirectory();
             }
         } else {
-            // L'utilisateur a annulé
+            // L'utilisateur a annulé → fermeture de l'application
             JOptionPane.showMessageDialog(
-                this,
-                "Vous devez sélectionner un répertoire d'échange pour utiliser l'application.",
-                "Configuration requise",
-                JOptionPane.WARNING_MESSAGE
+                    this,
+                    "Vous devez sélectionner un répertoire d'échange pour utiliser l'application.",
+                    "Configuration requise",
+                    JOptionPane.WARNING_MESSAGE
             );
+            System.exit(0);
         }
         
         
