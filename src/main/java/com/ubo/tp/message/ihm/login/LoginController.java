@@ -7,7 +7,6 @@ import javax.swing.JOptionPane;
 
 import main.java.com.ubo.tp.message.core.DataManager;
 import main.java.com.ubo.tp.message.datamodel.User;
-import main.java.com.ubo.tp.message.ihm.MessageAppMainView;
 
 /**
  * Contrôleur du composant de login.
@@ -16,15 +15,15 @@ public class LoginController {
     
     private LoginView mView;
     private DataManager mDataManager;
-    private MessageAppMainView mMainView;
+    private LoginComponent mComponent;
     
     /**
      * Constructeur.
      */
-    public LoginController(LoginView view, DataManager dataManager, MessageAppMainView mainView) {
+    public LoginController(LoginView view, DataManager dataManager, LoginComponent component) {
         this.mView = view;
         this.mDataManager = dataManager;
-        this.mMainView = mainView;
+        this.mComponent = component;
         initListeners();
     }
     
@@ -42,7 +41,7 @@ public class LoginController {
         mView.addCreateAccountListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                mMainView.showRegisterView();
+                mComponent.notifyRegisterRequest();
             }
         });
     }
@@ -70,9 +69,8 @@ public class LoginController {
         
         // Vérification tag + mot de passe
         if (user != null && user.getUserPassword().equals(password)) {
-            showInfo("Bienvenue " + user.getName() + " !");
             mView.clearFields();
-            // TODO : Gérer la session et passer à la vue principale
+            mComponent.notifyLogin(user);
         } else {
             showError("Tag ou mot de passe incorrect.");
         }
