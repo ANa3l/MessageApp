@@ -1,18 +1,15 @@
 package main.java.com.ubo.tp.message.ihm;
 
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.io.InputStream;
 
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import main.java.com.ubo.tp.message.core.DataManager;
-import main.java.com.ubo.tp.message.ihm.login.LoginController;
-import main.java.com.ubo.tp.message.ihm.login.LoginView;
-import main.java.com.ubo.tp.message.ihm.login.RegisterController;
-import main.java.com.ubo.tp.message.ihm.login.RegisterView;
+import main.java.com.ubo.tp.message.datamodel.User;
+import main.java.com.ubo.tp.message.ihm.login.ILoginObserver;
+import main.java.com.ubo.tp.message.ihm.login.LoginComponent;
+import main.java.com.ubo.tp.message.ihm.register.IRegisterObserver;
+import main.java.com.ubo.tp.message.ihm.register.RegisterComponent;
 
 /**
  * Classe de la vue principale de l'application.
@@ -20,10 +17,8 @@ import main.java.com.ubo.tp.message.ihm.login.RegisterView;
 public class MessageAppMainView extends JPanel {
     
     private DataManager mDataManager;
-    private LoginView mLoginView;
-    private LoginController mLoginController;
-    private RegisterView mRegisterView;
-    private RegisterController mRegisterController;
+    private LoginComponent mLoginComponent;
+    private RegisterComponent mRegisterComponent;
     
     /**
      * Constructeur.
@@ -41,14 +36,37 @@ public class MessageAppMainView extends JPanel {
     private void initComponents() {
         setLayout(new BorderLayout());
         
-     // Vue de login
-        mLoginView = new LoginView();
-        mLoginController = new LoginController(mLoginView, mDataManager, this);
-        mRegisterView = new RegisterView();
-        mRegisterController = new RegisterController(mRegisterView, mDataManager, this);
+        // Composant Login
+        mLoginComponent = new LoginComponent(mDataManager);
+        mLoginComponent.addObserver(new ILoginObserver() {
+            @Override
+            public void notifyLogin(User connectedUser) {
+                System.out.println("[APP] Utilisateur connecté : " + connectedUser.getName());
+                // TODO : Afficher la vue principale
+            }
+            
+            @Override
+            public void notifyRegisterRequest() {
+                showRegisterView();
+            }
+        });
         
-        add(mLoginView, BorderLayout.CENTER);
-       
+        // Composant Register
+        mRegisterComponent = new RegisterComponent(mDataManager);
+        mRegisterComponent.addObserver(new IRegisterObserver() {
+            @Override
+            public void notifyAccountCreated() {
+                showLoginView();
+            }
+            
+            @Override
+            public void notifyBackToLogin() {
+                showLoginView();
+            }
+        });
+        
+        // Affichage initial
+        showLoginView();
     }
     
     /**
@@ -56,7 +74,7 @@ public class MessageAppMainView extends JPanel {
      */
     public void showLoginView() {
         removeAll();
-        add(mLoginView, BorderLayout.CENTER);
+        add(mLoginComponent.getView(), BorderLayout.CENTER);
         revalidate();
         repaint();
     }
@@ -66,7 +84,7 @@ public class MessageAppMainView extends JPanel {
      */
     public void showRegisterView() {
         removeAll();
-        add(mRegisterView, BorderLayout.CENTER);
+        add(mRegisterComponent.getView(), BorderLayout.CENTER);
         revalidate();
         repaint();
     }

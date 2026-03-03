@@ -1,4 +1,4 @@
-package main.java.com.ubo.tp.message.ihm.login;
+package main.java.com.ubo.tp.message.ihm.register;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -7,7 +7,6 @@ import javax.swing.JOptionPane;
 
 import main.java.com.ubo.tp.message.core.DataManager;
 import main.java.com.ubo.tp.message.datamodel.User;
-import main.java.com.ubo.tp.message.ihm.MessageAppMainView;
 
 /**
  * Contrôleur du composant de création de compte.
@@ -16,15 +15,15 @@ public class RegisterController {
     
     private RegisterView mView;
     private DataManager mDataManager;
-    private MessageAppMainView mMainView;
+    private RegisterComponent mComponent;
     
     /**
      * Constructeur.
      */
-    public RegisterController(RegisterView view, DataManager dataManager, MessageAppMainView mainView) {
+    public RegisterController(RegisterView view, DataManager dataManager, RegisterComponent component) {
         this.mView = view;
         this.mDataManager = dataManager;
-        this.mMainView = mainView;
+        this.mComponent = component;
         initListeners();
     }
     
@@ -42,7 +41,7 @@ public class RegisterController {
         mView.addBackListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                mMainView.showLoginView();
+                mComponent.notifyBackToLogin();
             }
         });
     }
@@ -76,7 +75,7 @@ public class RegisterController {
         
         showInfo("Compte créé avec succès !");
         mView.clearFields();
-        mMainView.showLoginView();
+        mComponent.notifyAccountCreated();
     }
     
     /**

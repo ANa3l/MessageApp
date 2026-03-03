@@ -1,4 +1,4 @@
-package main.java.com.ubo.tp.message.ihm.login;
+package main.java.com.ubo.tp.message.ihm.register;
 
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
