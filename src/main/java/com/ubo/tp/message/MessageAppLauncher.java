@@ -45,7 +45,10 @@ public class MessageAppLauncher {
         }*/
 
         MessageApp messageApp = new MessageApp(dataManager);
-       messageApp.showGUI();
+        messageApp.showGUI();
+
+        // Enregistrer le logger sur la session
+        messageApp.getSession().addObserver(consoleLogger);
 
     }
 }

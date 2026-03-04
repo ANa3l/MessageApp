@@ -5,10 +5,13 @@ import java.awt.BorderLayout;
 import javax.swing.JPanel;
 
 import main.java.com.ubo.tp.message.core.DataManager;
+import main.java.com.ubo.tp.message.core.session.ISessionObserver;
 import main.java.com.ubo.tp.message.core.session.Session;
 import main.java.com.ubo.tp.message.datamodel.User;
 import main.java.com.ubo.tp.message.ihm.login.ILoginObserver;
 import main.java.com.ubo.tp.message.ihm.login.LoginComponent;
+import main.java.com.ubo.tp.message.ihm.logout.ILogoutObserver;
+import main.java.com.ubo.tp.message.ihm.logout.LogoutComponent;
 import main.java.com.ubo.tp.message.ihm.register.IRegisterObserver;
 import main.java.com.ubo.tp.message.ihm.register.RegisterComponent;
 
@@ -21,6 +24,7 @@ public class MessageAppMainView extends JPanel {
     private Session mSession;
     private LoginComponent mLoginComponent;
     private RegisterComponent mRegisterComponent;
+    private LogoutComponent mLogoutComponent;
     private HomeView mHomeView;
 
     /**
@@ -30,6 +34,7 @@ public class MessageAppMainView extends JPanel {
         this.mDataManager = dataManager;
         this.mSession = session;
         initComponents();
+        initSessionObserver();
     }
 
     /**
@@ -43,7 +48,8 @@ public class MessageAppMainView extends JPanel {
         mLoginComponent.addObserver(new ILoginObserver() {
             @Override
             public void notifyLogin(User connectedUser) {
-                handleLogin(connectedUser);
+                // La session déclenche la navigation
+                mSession.connect(connectedUser);
             }
 
             @Override
@@ -66,19 +72,38 @@ public class MessageAppMainView extends JPanel {
             }
         });
 
+        // Composant Logout
+        mLogoutComponent = new LogoutComponent();
+        mLogoutComponent.addObserver(new ILogoutObserver() {
+            @Override
+            public void notifyLogout() {
+                // La session déclenche la navigation
+                mSession.disconnect();
+            }
+        });
+
         // Vue Home
-        mHomeView = new HomeView();
+        mHomeView = new HomeView(mLogoutComponent);
 
         // Affichage initial
         showLoginView();
     }
 
     /**
-     * Gestion de la connexion réussie.
+     * Observe la session pour naviguer automatiquement.
      */
-    private void handleLogin(User connectedUser) {
-        mSession.connect(connectedUser);
-        showHomeView(connectedUser);
+    private void initSessionObserver() {
+        mSession.addObserver(new ISessionObserver() {
+            @Override
+            public void notifyLogin(User connectedUser) {
+                showHomeView(connectedUser);
+            }
+
+            @Override
+            public void notifyLogout() {
+                showLoginView();
+            }
+        });
     }
 
     /**

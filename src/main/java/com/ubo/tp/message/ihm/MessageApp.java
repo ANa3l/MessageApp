@@ -67,6 +67,9 @@ public class MessageApp extends JFrame {
         // Init du look and feel de l'application
         this.initLookAndFeel();
 
+        // Initialisation de la session
+        mSession = new Session();
+
         // Initialisation de l'IHM
         this.initGui();
 
@@ -107,7 +110,6 @@ public class MessageApp extends JFrame {
         setJMenuBar(new MessageAppMenuBar(this));
 
         // Création de la vue principale
-        this.mSession = new Session();
         mMainView = new MessageAppMainView(mDataManager, mSession);
         setContentPane(this.mMainView);
 
@@ -201,6 +203,13 @@ public class MessageApp extends JFrame {
         mDataManager.setExchangeDirectory(directoryPath);
     }
     
+    /**
+     * Retourne la session.
+     */
+    public Session getSession() {
+        return mSession;
+    }
+
     /**
      * Quitte l'application.
      */
