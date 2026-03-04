@@ -1,6 +1,7 @@
 package main.java.com.ubo.tp.message.ihm;
 
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -10,9 +11,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import main.java.com.ubo.tp.message.datamodel.User;
+import main.java.com.ubo.tp.message.ihm.logout.LogoutComponent;
 
 /**
  * Vue principale après connexion.
+ * Assemble les composants.
  */
 public class HomeView extends JPanel {
 
@@ -21,29 +24,43 @@ public class HomeView extends JPanel {
     /**
      * Constructeur.
      */
-    public HomeView() {
-        initComponents();
+    public HomeView(LogoutComponent logoutComponent) {
+        initComponents(logoutComponent);
     }
 
     /**
      * Initialisation des composants.
      */
-    private void initComponents() {
-        setLayout(new GridBagLayout());
+    private void initComponents(LogoutComponent logoutComponent) {
+        setLayout(new BorderLayout());
 
-        JPanel homePanel = new JPanel(new BorderLayout());
-        homePanel.setBorder(BorderFactory.createCompoundBorder(
+        // Header
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        mWelcomeLabel = new JLabel("Bienvenue !");
+        headerPanel.add(mWelcomeLabel, BorderLayout.CENTER);
+
+        // Ajout du composant déconnexion
+        JPanel logoutPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        logoutPanel.add(logoutComponent.getView());
+        headerPanel.add(logoutPanel, BorderLayout.EAST);
+
+        add(headerPanel, BorderLayout.NORTH);
+
+        // Contenu central
+        JPanel contentPanel = new JPanel(new GridBagLayout());
+        contentPanel.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createTitledBorder("Accueil"),
             BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
 
-        mWelcomeLabel = new JLabel("Bienvenue !");
-        mWelcomeLabel.setHorizontalAlignment(JLabel.CENTER);
-        homePanel.add(mWelcomeLabel, BorderLayout.CENTER);
+        JLabel placeholderLabel = new JLabel("Contenu à venir...");
+        contentPanel.add(placeholderLabel, new GridBagConstraints(0, 0, 1, 1, 0, 0,
+            GridBagConstraints.CENTER, GridBagConstraints.NONE,
+            new Insets(0, 0, 0, 0), 0, 0));
 
-        add(homePanel, new GridBagConstraints(0, 0, 1, 1, 1, 1,
-            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-            new Insets(10, 10, 10, 10), 0, 0));
+        add(contentPanel, BorderLayout.CENTER);
     }
 
     /**
