@@ -1,6 +1,8 @@
 package main.java.com.ubo.tp.message.ihm.user;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import main.java.com.ubo.tp.message.common.Constants;
@@ -11,13 +13,15 @@ import main.java.com.ubo.tp.message.datamodel.Message;
 import main.java.com.ubo.tp.message.datamodel.User;
 
 /**
- * Contrôleur du composant utilisateur.
- * Écoute la base de données pour rafraîchir la liste.
+ * Controleur du composant utilisateur.
+ * Ecoute la base de donnees pour rafraichir la liste.
+ * Gere le filtrage par recherche (SRS-MAP-USR-008).
  */
 public class UserController implements IDatabaseObserver {
 
     private UserView mView;
     private DataManager mDataManager;
+    private String mSearchFilter = "";
 
     /**
      * Constructeur.
@@ -29,12 +33,40 @@ public class UserController implements IDatabaseObserver {
     }
 
     /**
-     * Rafraîchit la liste des utilisateurs.
+     * Met a jour le filtre de recherche et rafraichit la liste.
+     */
+    public void setSearchFilter(String filter) {
+        this.mSearchFilter = filter.trim().toLowerCase();
+        refreshUserList();
+    }
+
+    /**
+     * Rafraichit la liste des utilisateurs en appliquant le filtre.
      */
     private void refreshUserList() {
-        Set<User> users = new HashSet<>(mDataManager.getUsers());
-        users.removeIf(u -> u.getUuid().equals(Constants.UNKNONWN_USER_UUID));
-        mView.updateUserList(users);
+        Set<User> allUsers = new HashSet<>(mDataManager.getUsers());
+        allUsers.removeIf(u -> u.getUuid().equals(Constants.UNKNONWN_USER_UUID));
+
+        List<User> filtered = new ArrayList<>();
+        for (User user : allUsers) {
+            if (matchesFilter(user)) {
+                filtered.add(user);
+            }
+        }
+
+        mView.updateUserList(filtered);
+    }
+
+    /**
+     * Verifie si un utilisateur correspond au filtre de recherche.
+     */
+    private boolean matchesFilter(User user) {
+        if (mSearchFilter.isEmpty()) {
+            return true;
+        }
+        String name = user.getName().toLowerCase();
+        String tag = user.getUserTag().toLowerCase();
+        return name.contains(mSearchFilter) || tag.contains(mSearchFilter);
     }
 
     // === IDatabaseObserver ===
@@ -56,31 +88,25 @@ public class UserController implements IDatabaseObserver {
 
     @Override
     public void notifyMessageAdded(Message addedMessage) {
-        // Pas utilisé
     }
 
     @Override
     public void notifyMessageDeleted(Message deletedMessage) {
-        // Pas utilisé
     }
 
     @Override
     public void notifyMessageModified(Message modifiedMessage) {
-        // Pas utilisé
     }
 
     @Override
     public void notifyChannelAdded(Channel addedChannel) {
-        // Pas utilisé
     }
 
     @Override
     public void notifyChannelDeleted(Channel deletedChannel) {
-        // Pas utilisé
     }
 
     @Override
     public void notifyChannelModified(Channel modifiedChannel) {
-        // Pas utilisé
     }
 }
