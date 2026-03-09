@@ -1,5 +1,9 @@
 package main.java.com.ubo.tp.message.ihm.user;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import main.java.com.ubo.tp.message.common.Constants;
 import main.java.com.ubo.tp.message.core.DataManager;
 import main.java.com.ubo.tp.message.core.database.IDatabaseObserver;
 import main.java.com.ubo.tp.message.datamodel.Channel;
@@ -28,7 +32,9 @@ public class UserController implements IDatabaseObserver {
      * Rafraîchit la liste des utilisateurs.
      */
     private void refreshUserList() {
-        mView.updateUserList(mDataManager.getUsers());
+        Set<User> users = new HashSet<>(mDataManager.getUsers());
+        users.removeIf(u -> u.getUuid().equals(Constants.UNKNONWN_USER_UUID));
+        mView.updateUserList(users);
     }
 
     // === IDatabaseObserver ===

@@ -1,6 +1,7 @@
 package main.java.com.ubo.tp.message.ihm;
 
 import java.io.File;
+import java.util.Properties;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
@@ -9,6 +10,8 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import main.java.com.ubo.tp.message.common.Constants;
+import main.java.com.ubo.tp.message.common.PropertiesManager;
 import main.java.com.ubo.tp.message.core.DataManager;
 import main.java.com.ubo.tp.message.core.database.IDatabase;
 import main.java.com.ubo.tp.message.core.session.Session;
@@ -19,6 +22,11 @@ import main.java.com.ubo.tp.message.core.session.Session;
  * @author S.Lucas
  */
 public class MessageApp extends JFrame {
+    /**
+     * Chemin du fichier de configuration.
+     */
+    private static final String CONFIG_FILE_PATH = "src/main/resources/configuration.properties";
+
     /**
      * Base de données.
      */
@@ -149,17 +157,33 @@ public class MessageApp extends JFrame {
      * pouvoir utiliser l'application
      */
     protected void initDirectory() {
+        // Charger le dernier répertoire depuis la configuration
+        Properties config = PropertiesManager.loadProperties(CONFIG_FILE_PATH);
+        String lastDirectory = config.getProperty(Constants.CONFIGURATION_KEY_EXCHANGE_DIRECTORY, "");
+
+        // Ouvrir le sélecteur de fichiers
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Sélectionner un répertoir ");
+        fileChooser.setDialogTitle("Sélectionner un répertoire d'échange");
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         fileChooser.setAcceptAllFileFilterUsed(false);
-        
+
+        // Pré-sélectionner le dernier répertoire connu
+        if (!lastDirectory.isEmpty()) {
+            File lastDir = new File(lastDirectory);
+            if (lastDir.exists()) {
+                fileChooser.setCurrentDirectory(lastDir.getParentFile());
+                fileChooser.setSelectedFile(lastDir);
+            }
+        }
+
         int result = fileChooser.showOpenDialog(this);
         
         if (result == JFileChooser.APPROVE_OPTION) {
             File selectedDirectory = fileChooser.getSelectedFile();
             
             if (isValidExchangeDirectory(selectedDirectory)) {
+                // Sauvegarder le choix dans la configuration
+                saveDirectoryConfig(selectedDirectory.getAbsolutePath());
                 initDirectory(selectedDirectory.getAbsolutePath());
                 JOptionPane.showMessageDialog(
                     this,
@@ -174,11 +198,9 @@ public class MessageApp extends JFrame {
                     "Erreur",
                     JOptionPane.ERROR_MESSAGE
                 );
-                // Redemander la sélection
                 initDirectory();
             }
         } else {
-            // L'utilisateur a annulé → fermeture de l'application
             JOptionPane.showMessageDialog(
                     this,
                     "Vous devez sélectionner un répertoire d'échange pour utiliser l'application.",
@@ -187,8 +209,6 @@ public class MessageApp extends JFrame {
             );
             System.exit(0);
         }
-        
-        
     }
 
     /**
@@ -209,6 +229,15 @@ public class MessageApp extends JFrame {
      */
     protected void initDirectory(String directoryPath) {
         mDataManager.setExchangeDirectory(directoryPath);
+    }
+
+    /**
+     * Sauvegarde le répertoire d'échange dans le fichier de configuration.
+     */
+    private void saveDirectoryConfig(String directoryPath) {
+        Properties config = PropertiesManager.loadProperties(CONFIG_FILE_PATH);
+        config.setProperty(Constants.CONFIGURATION_KEY_EXCHANGE_DIRECTORY, directoryPath);
+        PropertiesManager.writeProperties(config, CONFIG_FILE_PATH);
     }
     
     /**

@@ -47,6 +47,7 @@ public class MessageAppMainView extends JPanel {
      */
     private void initComponents() {
         setLayout(new BorderLayout());
+        setBackground(Theme.BACKGROUND);
 
         // Composant Login
         mLoginComponent = new LoginComponent(mDataManager);
