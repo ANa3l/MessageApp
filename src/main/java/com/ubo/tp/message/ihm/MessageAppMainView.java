@@ -5,6 +5,7 @@ import java.awt.BorderLayout;
 import javax.swing.JPanel;
 
 import main.java.com.ubo.tp.message.core.DataManager;
+import main.java.com.ubo.tp.message.core.database.IDatabase;
 import main.java.com.ubo.tp.message.core.session.ISessionObserver;
 import main.java.com.ubo.tp.message.core.session.Session;
 import main.java.com.ubo.tp.message.datamodel.User;
@@ -14,6 +15,7 @@ import main.java.com.ubo.tp.message.ihm.logout.ILogoutObserver;
 import main.java.com.ubo.tp.message.ihm.logout.LogoutComponent;
 import main.java.com.ubo.tp.message.ihm.register.IRegisterObserver;
 import main.java.com.ubo.tp.message.ihm.register.RegisterComponent;
+import main.java.com.ubo.tp.message.ihm.user.UserComponent;
 
 /**
  * Vue principale de l'application.
@@ -21,17 +23,20 @@ import main.java.com.ubo.tp.message.ihm.register.RegisterComponent;
 public class MessageAppMainView extends JPanel {
 
     private DataManager mDataManager;
+    private IDatabase mDatabase;
     private Session mSession;
     private LoginComponent mLoginComponent;
     private RegisterComponent mRegisterComponent;
     private LogoutComponent mLogoutComponent;
+    private UserComponent mUserComponent;
     private HomeView mHomeView;
 
     /**
      * Constructeur.
      */
-    public MessageAppMainView(DataManager dataManager, Session session) {
+    public MessageAppMainView(DataManager dataManager, IDatabase database, Session session) {
         this.mDataManager = dataManager;
+        this.mDatabase = database;
         this.mSession = session;
         initComponents();
         initSessionObserver();
@@ -42,6 +47,7 @@ public class MessageAppMainView extends JPanel {
      */
     private void initComponents() {
         setLayout(new BorderLayout());
+        setBackground(Theme.BACKGROUND);
 
         // Composant Login
         mLoginComponent = new LoginComponent(mDataManager);
@@ -82,8 +88,11 @@ public class MessageAppMainView extends JPanel {
             }
         });
 
+        // Composant User
+        mUserComponent = new UserComponent(mDataManager, mDatabase);
+
         // Vue Home
-        mHomeView = new HomeView(mLogoutComponent);
+        mHomeView = new HomeView(mLogoutComponent, mUserComponent);
 
         // Affichage initial
         showLoginView();

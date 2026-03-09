@@ -1,70 +1,69 @@
 package main.java.com.ubo.tp.message.ihm;
 
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.Dimension;
 
-import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSplitPane;
 
 import main.java.com.ubo.tp.message.datamodel.User;
 import main.java.com.ubo.tp.message.ihm.logout.LogoutComponent;
+import main.java.com.ubo.tp.message.ihm.user.UserComponent;
 
 /**
- * Vue principale après connexion.
+ * Vue principale apres connexion.
  * Assemble les composants.
  */
 public class HomeView extends JPanel {
 
     private JLabel mWelcomeLabel;
+    private JPanel mCenterContent;
 
     /**
      * Constructeur.
      */
-    public HomeView(LogoutComponent logoutComponent) {
-        initComponents(logoutComponent);
+    public HomeView(LogoutComponent logoutComponent, UserComponent userComponent) {
+        initComponents(logoutComponent, userComponent);
     }
 
     /**
      * Initialisation des composants.
      */
-    private void initComponents(LogoutComponent logoutComponent) {
+    private void initComponents(LogoutComponent logoutComponent, UserComponent userComponent) {
         setLayout(new BorderLayout());
 
-        // Header
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
+        // === Header ===
         mWelcomeLabel = new JLabel("Bienvenue !");
-        headerPanel.add(mWelcomeLabel, BorderLayout.CENTER);
-
-        // Ajout du composant déconnexion
-        JPanel logoutPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel logoutPanel = Theme.createRightAlignedPanel();
         logoutPanel.add(logoutComponent.getView());
-        headerPanel.add(logoutPanel, BorderLayout.EAST);
+        add(Theme.createHeaderBar(mWelcomeLabel, logoutPanel), BorderLayout.NORTH);
 
-        add(headerPanel, BorderLayout.NORTH);
+        // === Sidebar gauche (utilisateurs) ===
+        JPanel sidebarPanel = userComponent.getView();
+        sidebarPanel.setPreferredSize(new Dimension(250, 0));
 
-        // Contenu central
-        JPanel contentPanel = new JPanel(new GridBagLayout());
-        contentPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createTitledBorder("Accueil"),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
+        // === Zone centrale (contenu futur : messages, channels...) ===
+        mCenterContent = Theme.createPlaceholderPanel("Selectionnez un utilisateur ou un canal");
 
-        JLabel placeholderLabel = new JLabel("Contenu à venir...");
-        contentPanel.add(placeholderLabel, new GridBagConstraints(0, 0, 1, 1, 0, 0,
-            GridBagConstraints.CENTER, GridBagConstraints.NONE,
-            new Insets(0, 0, 0, 0), 0, 0));
+        // === SplitPane : sidebar | contenu ===
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sidebarPanel, mCenterContent);
+        splitPane.setDividerLocation(250);
+        splitPane.setDividerSize(3);
+        splitPane.setBorder(null);
 
-        add(contentPanel, BorderLayout.CENTER);
+        add(splitPane, BorderLayout.CENTER);
     }
 
     /**
-     * Met à jour l'affichage avec l'utilisateur connecté.
+     * Retourne le panneau central pour y ajouter du contenu.
+     */
+    public JPanel getCenterContent() {
+        return mCenterContent;
+    }
+
+    /**
+     * Met a jour l'affichage avec l'utilisateur connecte.
      */
     public void setConnectedUser(User user) {
         mWelcomeLabel.setText("Bienvenue " + user.getName() + " (@" + user.getUserTag() + ") !");
