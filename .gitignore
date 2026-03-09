@@ -1,1 +1,5 @@
 /bin/
+/target/
+
+# Fichier de configuration (timestamp change à chaque ouverture)
+**/configuration.properties

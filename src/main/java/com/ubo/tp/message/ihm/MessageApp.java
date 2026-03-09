@@ -185,12 +185,6 @@ public class MessageApp extends JFrame {
                 // Sauvegarder le choix dans la configuration
                 saveDirectoryConfig(selectedDirectory.getAbsolutePath());
                 initDirectory(selectedDirectory.getAbsolutePath());
-                JOptionPane.showMessageDialog(
-                    this,
-                    "Répertoire d'échange configuré : " + selectedDirectory.getAbsolutePath(),
-                    "Configuration",
-                    JOptionPane.INFORMATION_MESSAGE
-                );
             } else {
                 JOptionPane.showMessageDialog(
                     this,
