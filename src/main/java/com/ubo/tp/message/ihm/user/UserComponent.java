@@ -1,14 +1,17 @@
 package main.java.com.ubo.tp.message.ihm.user;
 
 import javax.swing.JPanel;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import main.java.com.ubo.tp.message.core.DataManager;
 import main.java.com.ubo.tp.message.core.database.IDatabase;
+import main.java.com.ubo.tp.message.datamodel.User;
 
 /**
  * Composant utilisateur.
- * Assemble la vue et le contrôleur.
- * SRS-MAP-USR-007
+ * Assemble la vue et le controleur.
+ * SRS-MAP-USR-007, SRS-MAP-USR-008
  */
 public class UserComponent {
 
@@ -24,6 +27,31 @@ public class UserComponent {
 
         // Enregistrer le controller comme observateur de la DB
         database.addObserver(mController);
+
+        // Cablage recherche : champ texte -> controller
+        mView.getSearchField().getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                mController.setSearchFilter(mView.getSearchField().getText());
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                mController.setSearchFilter(mView.getSearchField().getText());
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                mController.setSearchFilter(mView.getSearchField().getText());
+            }
+        });
+    }
+
+    /**
+     * Definit l'utilisateur connecte (exclu de la liste).
+     */
+    public void setConnectedUser(User user) {
+        mController.setConnectedUser(user);
     }
 
     /**

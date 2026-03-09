@@ -7,8 +7,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
-import main.java.com.ubo.tp.message.datamodel.User;
-import main.java.com.ubo.tp.message.ihm.logout.LogoutComponent;
+import main.java.com.ubo.tp.message.ihm.profile.ProfileComponent;
 import main.java.com.ubo.tp.message.ihm.user.UserComponent;
 
 /**
@@ -17,27 +16,27 @@ import main.java.com.ubo.tp.message.ihm.user.UserComponent;
  */
 public class HomeView extends JPanel {
 
-    private JLabel mWelcomeLabel;
+    private JLabel mHeaderLabel;
     private JPanel mCenterContent;
 
     /**
      * Constructeur.
      */
-    public HomeView(LogoutComponent logoutComponent, UserComponent userComponent) {
-        initComponents(logoutComponent, userComponent);
+    public HomeView(ProfileComponent profileComponent, UserComponent userComponent) {
+        initComponents(profileComponent, userComponent);
     }
 
     /**
      * Initialisation des composants.
      */
-    private void initComponents(LogoutComponent logoutComponent, UserComponent userComponent) {
+    private void initComponents(ProfileComponent profileComponent, UserComponent userComponent) {
         setLayout(new BorderLayout());
 
         // === Header ===
-        mWelcomeLabel = new JLabel("Bienvenue !");
-        JPanel logoutPanel = Theme.createRightAlignedPanel();
-        logoutPanel.add(logoutComponent.getView());
-        add(Theme.createHeaderBar(mWelcomeLabel, logoutPanel), BorderLayout.NORTH);
+        mHeaderLabel = new JLabel("Accueil");
+        JPanel profilePanel = Theme.createRightAlignedPanel();
+        profilePanel.add(profileComponent.getView());
+        add(Theme.createHeaderBar(mHeaderLabel, profilePanel), BorderLayout.NORTH);
 
         // === Sidebar gauche (utilisateurs) ===
         JPanel sidebarPanel = userComponent.getView();
@@ -60,12 +59,5 @@ public class HomeView extends JPanel {
      */
     public JPanel getCenterContent() {
         return mCenterContent;
-    }
-
-    /**
-     * Met a jour l'affichage avec l'utilisateur connecte.
-     */
-    public void setConnectedUser(User user) {
-        mWelcomeLabel.setText("Bienvenue " + user.getName() + " (@" + user.getUserTag() + ") !");
     }
 }

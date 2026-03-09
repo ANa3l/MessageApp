@@ -11,8 +11,8 @@ import main.java.com.ubo.tp.message.core.session.Session;
 import main.java.com.ubo.tp.message.datamodel.User;
 import main.java.com.ubo.tp.message.ihm.login.ILoginObserver;
 import main.java.com.ubo.tp.message.ihm.login.LoginComponent;
-import main.java.com.ubo.tp.message.ihm.logout.ILogoutObserver;
-import main.java.com.ubo.tp.message.ihm.logout.LogoutComponent;
+import main.java.com.ubo.tp.message.ihm.profile.IProfileObserver;
+import main.java.com.ubo.tp.message.ihm.profile.ProfileComponent;
 import main.java.com.ubo.tp.message.ihm.register.IRegisterObserver;
 import main.java.com.ubo.tp.message.ihm.register.RegisterComponent;
 import main.java.com.ubo.tp.message.ihm.user.UserComponent;
@@ -27,7 +27,7 @@ public class MessageAppMainView extends JPanel {
     private Session mSession;
     private LoginComponent mLoginComponent;
     private RegisterComponent mRegisterComponent;
-    private LogoutComponent mLogoutComponent;
+    private ProfileComponent mProfileComponent;
     private UserComponent mUserComponent;
     private HomeView mHomeView;
 
@@ -78,13 +78,17 @@ public class MessageAppMainView extends JPanel {
             }
         });
 
-        // Composant Logout
-        mLogoutComponent = new LogoutComponent();
-        mLogoutComponent.addObserver(new ILogoutObserver() {
+        // Composant Profil
+        mProfileComponent = new ProfileComponent();
+        mProfileComponent.addObserver(new IProfileObserver() {
             @Override
-            public void notifyLogout() {
-                // La session déclenche la navigation
+            public void notifyLogoutRequest() {
                 mSession.disconnect();
+            }
+
+            @Override
+            public void notifyProfileRequest() {
+                // TODO : afficher le profil utilisateur
             }
         });
 
@@ -92,7 +96,7 @@ public class MessageAppMainView extends JPanel {
         mUserComponent = new UserComponent(mDataManager, mDatabase);
 
         // Vue Home
-        mHomeView = new HomeView(mLogoutComponent, mUserComponent);
+        mHomeView = new HomeView(mProfileComponent, mUserComponent);
 
         // Affichage initial
         showLoginView();
@@ -139,7 +143,8 @@ public class MessageAppMainView extends JPanel {
      * Affiche la vue d'accueil après connexion.
      */
     public void showHomeView(User connectedUser) {
-        mHomeView.setConnectedUser(connectedUser);
+        mProfileComponent.setConnectedUser(connectedUser);
+        mUserComponent.setConnectedUser(connectedUser);
         removeAll();
         add(mHomeView, BorderLayout.CENTER);
         revalidate();

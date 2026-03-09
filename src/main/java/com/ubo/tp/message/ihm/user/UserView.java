@@ -2,12 +2,13 @@ package main.java.com.ubo.tp.message.ihm.user;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;import java.awt.Dimension;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.util.Set;
+import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -16,6 +17,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
@@ -25,12 +27,13 @@ import main.java.com.ubo.tp.message.ihm.Theme;
 
 /**
  * Vue du composant utilisateur.
- * Affiche la liste des utilisateurs enregistrés.
+ * Affiche la liste des utilisateurs enregistres.
  */
 public class UserView extends JPanel {
 
     private JList<User> mUserList;
     private DefaultListModel<User> mListModel;
+    private JTextField mSearchField;
 
     /**
      * Constructeur.
@@ -46,16 +49,33 @@ public class UserView extends JPanel {
         setLayout(new BorderLayout());
         setBackground(Theme.SIDEBAR);
 
-        // Titre
+        // === Header (titre + recherche) ===
+        JPanel headerPanel = new JPanel();
+        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
+        headerPanel.setBackground(Theme.SIDEBAR);
+
         JLabel titleLabel = new JLabel("Utilisateurs");
         titleLabel.setFont(Theme.FONT_SUBTITLE);
         titleLabel.setForeground(Theme.TEXT_SECONDARY);
-        titleLabel.setBorder(new EmptyBorder(12, 14, 10, 14));
+        titleLabel.setBorder(new EmptyBorder(12, 14, 6, 14));
         titleLabel.setOpaque(true);
         titleLabel.setBackground(Theme.SIDEBAR);
-        add(titleLabel, BorderLayout.NORTH);
+        titleLabel.setAlignmentX(LEFT_ALIGNMENT);
+        headerPanel.add(titleLabel);
 
-        // Liste
+        JPanel searchPanel = new JPanel(new BorderLayout());
+        searchPanel.setBackground(Theme.SIDEBAR);
+        searchPanel.setBorder(new EmptyBorder(0, 14, 10, 14));
+        searchPanel.setAlignmentX(LEFT_ALIGNMENT);
+        mSearchField = new JTextField();
+        mSearchField.setFont(Theme.FONT_BODY);
+        mSearchField.setToolTipText("Rechercher par nom ou tag");
+        searchPanel.add(mSearchField, BorderLayout.CENTER);
+        headerPanel.add(searchPanel);
+
+        add(headerPanel, BorderLayout.NORTH);
+
+        // === Liste ===
         mListModel = new DefaultListModel<>();
         mUserList = new JList<>(mListModel);
         mUserList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -71,9 +91,9 @@ public class UserView extends JPanel {
     }
 
     /**
-     * Met à jour la liste des utilisateurs.
+     * Met a jour la liste des utilisateurs affiches.
      */
-    public void updateUserList(Set<User> users) {
+    public void updateUserList(List<User> users) {
         mListModel.clear();
         for (User user : users) {
             mListModel.addElement(user);
@@ -81,7 +101,14 @@ public class UserView extends JPanel {
     }
 
     /**
-     * Retourne l'utilisateur sélectionné.
+     * Retourne le champ de recherche.
+     */
+    public JTextField getSearchField() {
+        return mSearchField;
+    }
+
+    /**
+     * Retourne l'utilisateur selectionne.
      */
     public User getSelectedUser() {
         return mUserList.getSelectedValue();
@@ -93,6 +120,8 @@ public class UserView extends JPanel {
     public JList<User> getUserList() {
         return mUserList;
     }
+
+    // === Classes internes (rendu graphique) ===
 
     /**
      * Renderer pour les cellules utilisateur.
@@ -153,14 +182,14 @@ public class UserView extends JPanel {
 
         private Color getAvatarColor(String tag) {
             Color[] colors = {
-                new Color(88, 101, 242),  // indigo
-                new Color(87, 169, 131),  // vert
-                new Color(237, 135, 82),  // orange
-                new Color(155, 89, 182),  // violet
-                new Color(231, 76, 60),   // rouge
-                new Color(52, 152, 219),  // bleu
-                new Color(149, 165, 166), // gris
-                new Color(241, 196, 15)   // jaune
+                new Color(88, 101, 242),
+                new Color(87, 169, 131),
+                new Color(237, 135, 82),
+                new Color(155, 89, 182),
+                new Color(231, 76, 60),
+                new Color(52, 152, 219),
+                new Color(149, 165, 166),
+                new Color(241, 196, 15)
             };
             return colors[Math.abs(tag.hashCode()) % colors.length];
         }
@@ -193,11 +222,9 @@ public class UserView extends JPanel {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-            // Cercle
             g2.setColor(mColor);
             g2.fillOval(0, 0, 34, 34);
 
-            // Initiale
             g2.setColor(Color.WHITE);
             g2.setFont(new Font("SansSerif", Font.BOLD, 14));
             int textWidth = g2.getFontMetrics().stringWidth(mInitial);
