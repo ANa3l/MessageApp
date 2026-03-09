@@ -6,6 +6,7 @@ import javax.swing.event.DocumentListener;
 
 import main.java.com.ubo.tp.message.core.DataManager;
 import main.java.com.ubo.tp.message.core.database.IDatabase;
+import main.java.com.ubo.tp.message.datamodel.User;
 
 /**
  * Composant utilisateur.
@@ -44,6 +45,13 @@ public class UserComponent {
                 mController.setSearchFilter(mView.getSearchField().getText());
             }
         });
+    }
+
+    /**
+     * Definit l'utilisateur connecte (exclu de la liste).
+     */
+    public void setConnectedUser(User user) {
+        mController.setConnectedUser(user);
     }
 
     /**

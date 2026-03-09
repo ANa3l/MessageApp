@@ -22,6 +22,7 @@ public class UserController implements IDatabaseObserver {
     private UserView mView;
     private DataManager mDataManager;
     private String mSearchFilter = "";
+    private User mConnectedUser;
 
     /**
      * Constructeur.
@@ -41,11 +42,22 @@ public class UserController implements IDatabaseObserver {
     }
 
     /**
+     * Definit l'utilisateur connecte (sera exclu de la liste).
+     */
+    public void setConnectedUser(User user) {
+        this.mConnectedUser = user;
+        refreshUserList();
+    }
+
+    /**
      * Rafraichit la liste des utilisateurs en appliquant le filtre.
      */
     private void refreshUserList() {
         Set<User> allUsers = new HashSet<>(mDataManager.getUsers());
         allUsers.removeIf(u -> u.getUuid().equals(Constants.UNKNONWN_USER_UUID));
+        if (mConnectedUser != null) {
+            allUsers.removeIf(u -> u.getUuid().equals(mConnectedUser.getUuid()));
+        }
 
         List<User> filtered = new ArrayList<>();
         for (User user : allUsers) {
