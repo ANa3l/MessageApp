@@ -7,7 +7,7 @@ import main.java.com.ubo.tp.message.core.database.DbConnector;
 import main.java.com.ubo.tp.message.core.database.EntityManager;
 import main.java.com.ubo.tp.message.ihm.ConsoleLogger;
 import main.java.com.ubo.tp.message.ihm.MessageApp;
-import mock.MessageAppMock;
+//import mock.MessageAppMock;
 
 /**
  * Classe de lancement de l'application.
