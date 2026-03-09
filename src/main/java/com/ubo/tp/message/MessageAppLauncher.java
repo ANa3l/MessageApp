@@ -44,7 +44,7 @@ public class MessageAppLauncher {
             mock.showGUI();
         }*/
 
-        MessageApp messageApp = new MessageApp(dataManager);
+        MessageApp messageApp = new MessageApp(dataManager, database);
         messageApp.showGUI();
 
         // Enregistrer le logger sur la session

@@ -10,6 +10,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import main.java.com.ubo.tp.message.core.DataManager;
+import main.java.com.ubo.tp.message.core.database.IDatabase;
 import main.java.com.ubo.tp.message.core.session.Session;
 
 /**
@@ -22,6 +23,11 @@ public class MessageApp extends JFrame {
      * Base de données.
      */
     protected DataManager mDataManager;
+
+    /**
+     * Base de données.
+     */
+    protected IDatabase mDatabase;
 
     /**
      * Vue principale de l'application.
@@ -37,10 +43,12 @@ public class MessageApp extends JFrame {
      * Constructeur.
      *
      * @param dataManager
+     * @param database
      */
-    public MessageApp(DataManager dataManager) {
+    public MessageApp(DataManager dataManager, IDatabase database) {
         super("MessageApp - Application de Messagerie");
         this.mDataManager = dataManager;
+        this.mDatabase = database;
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
@@ -110,7 +118,7 @@ public class MessageApp extends JFrame {
         setJMenuBar(new MessageAppMenuBar(this));
 
         // Création de la vue principale
-        mMainView = new MessageAppMainView(mDataManager, mSession);
+        mMainView = new MessageAppMainView(mDataManager, mDatabase, mSession);
         setContentPane(this.mMainView);
 
         // Configuration de la fenêtre

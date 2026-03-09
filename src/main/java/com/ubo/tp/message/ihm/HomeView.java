@@ -2,9 +2,6 @@ package main.java.com.ubo.tp.message.ihm;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
@@ -12,6 +9,7 @@ import javax.swing.JPanel;
 
 import main.java.com.ubo.tp.message.datamodel.User;
 import main.java.com.ubo.tp.message.ihm.logout.LogoutComponent;
+import main.java.com.ubo.tp.message.ihm.user.UserComponent;
 
 /**
  * Vue principale après connexion.
@@ -24,14 +22,14 @@ public class HomeView extends JPanel {
     /**
      * Constructeur.
      */
-    public HomeView(LogoutComponent logoutComponent) {
-        initComponents(logoutComponent);
+    public HomeView(LogoutComponent logoutComponent, UserComponent userComponent) {
+        initComponents(logoutComponent, userComponent);
     }
 
     /**
      * Initialisation des composants.
      */
-    private void initComponents(LogoutComponent logoutComponent) {
+    private void initComponents(LogoutComponent logoutComponent, UserComponent userComponent) {
         setLayout(new BorderLayout());
 
         // Header
@@ -48,19 +46,8 @@ public class HomeView extends JPanel {
 
         add(headerPanel, BorderLayout.NORTH);
 
-        // Contenu central
-        JPanel contentPanel = new JPanel(new GridBagLayout());
-        contentPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createTitledBorder("Accueil"),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
-
-        JLabel placeholderLabel = new JLabel("Contenu à venir...");
-        contentPanel.add(placeholderLabel, new GridBagConstraints(0, 0, 1, 1, 0, 0,
-            GridBagConstraints.CENTER, GridBagConstraints.NONE,
-            new Insets(0, 0, 0, 0), 0, 0));
-
-        add(contentPanel, BorderLayout.CENTER);
+        // Liste des utilisateurs
+        add(userComponent.getView(), BorderLayout.CENTER);
     }
 
     /**
