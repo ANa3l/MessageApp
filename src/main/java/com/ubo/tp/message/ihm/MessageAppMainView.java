@@ -15,6 +15,13 @@ import main.java.com.ubo.tp.message.ihm.profile.IProfileObserver;
 import main.java.com.ubo.tp.message.ihm.profile.ProfileComponent;
 import main.java.com.ubo.tp.message.ihm.profile.editor.IProfileEditorObserver;
 import main.java.com.ubo.tp.message.ihm.profile.editor.ProfileEditorComponent;
+import main.java.com.ubo.tp.message.ihm.channel.ChannelComponent;
+import main.java.com.ubo.tp.message.ihm.channel.IChannelObserver;
+import main.java.com.ubo.tp.message.ihm.channel.ChannelDetailComponent;
+import main.java.com.ubo.tp.message.ihm.channel.IChannelDetailObserver;
+import main.java.com.ubo.tp.message.ihm.channel.creator.ChannelCreatorComponent;
+import main.java.com.ubo.tp.message.ihm.channel.creator.IChannelCreatorObserver;
+import main.java.com.ubo.tp.message.datamodel.Channel;
 import main.java.com.ubo.tp.message.ihm.register.IRegisterObserver;
 import main.java.com.ubo.tp.message.ihm.register.RegisterComponent;
 import main.java.com.ubo.tp.message.ihm.user.UserComponent;
@@ -32,6 +39,9 @@ public class MessageAppMainView extends JPanel {
     private ProfileComponent mProfileComponent;
     private ProfileEditorComponent mProfileEditorComponent;
     private UserComponent mUserComponent;
+    private ChannelComponent mChannelComponent;
+    private ChannelCreatorComponent mChannelCreatorComponent;
+    private ChannelDetailComponent mChannelDetailComponent;
     private HomeView mHomeView;
 
     /**
@@ -121,8 +131,50 @@ public class MessageAppMainView extends JPanel {
         // Composant User
         mUserComponent = new UserComponent(mDataManager, mDatabase);
 
+        // Composant Channel
+        mChannelComponent = new ChannelComponent(mDataManager, mDatabase);
+        mChannelComponent.addObserver(new IChannelObserver() {
+            @Override
+            public void notifyChannelSelected(Channel selectedChannel) {
+                showChannelDetail(selectedChannel);
+            }
+
+            @Override
+            public void notifyCreateChannelRequest() {
+                showChannelCreator();
+            }
+        });
+
+        // Composant ChannelCreator
+        mChannelCreatorComponent = new ChannelCreatorComponent(mDataManager);
+        mChannelCreatorComponent.addObserver(new IChannelCreatorObserver() {
+            @Override
+            public void notifyChannelCreated(Channel channel) {
+                mHomeView.resetCenterContent();
+            }
+
+            @Override
+            public void notifyCreationCancelled() {
+                mHomeView.resetCenterContent();
+            }
+        });
+
+        // Composant ChannelDetail
+        mChannelDetailComponent = new ChannelDetailComponent(mDataManager);
+        mChannelDetailComponent.addObserver(new IChannelDetailObserver() {
+            @Override
+            public void notifyChannelDeleted() {
+                mHomeView.resetCenterContent();
+            }
+
+            @Override
+            public void notifyChannelLeft() {
+                mHomeView.resetCenterContent();
+            }
+        });
+
         // Vue Home
-        mHomeView = new HomeView(mProfileComponent, mUserComponent);
+        mHomeView = new HomeView(mProfileComponent, mUserComponent, mChannelComponent);
 
         // Affichage initial
         showLoginView();
@@ -172,6 +224,8 @@ public class MessageAppMainView extends JPanel {
         mProfileComponent.setConnectedUser(connectedUser);
         mProfileEditorComponent.setConnectedUser(connectedUser);
         mUserComponent.setConnectedUser(connectedUser);
+        mChannelComponent.setConnectedUser(connectedUser);
+        mChannelCreatorComponent.setConnectedUser(connectedUser);
         mHomeView.resetCenterContent();
         removeAll();
         add(mHomeView, BorderLayout.CENTER);
@@ -184,5 +238,20 @@ public class MessageAppMainView extends JPanel {
      */
     private void showProfileEditor() {
         mHomeView.setCenterContent(mProfileEditorComponent.getView());
+    }
+
+    /**
+     * Affiche le formulaire de creation de canal dans la zone centrale.
+     */
+    private void showChannelCreator() {
+        mHomeView.setCenterContent(mChannelCreatorComponent.getView());
+    }
+
+    /**
+     * Affiche le detail d'un canal dans la zone centrale.
+     */
+    private void showChannelDetail(Channel channel) {
+        mChannelDetailComponent.setChannel(channel, mSession.getConnectedUser());
+        mHomeView.setCenterContent(mChannelDetailComponent.getView());
     }
 }

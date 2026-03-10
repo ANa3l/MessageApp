@@ -121,6 +121,10 @@ public class DataManager {
 		this.mEntityManager.writeChannelFile(channel);
 	}
 
+	public void deleteChannel(Channel channel) {
+		this.mEntityManager.deleteChannelFile(channel);
+	}
+
 	/**
 	 * Retourne tous les Messages d'un utilisateur.
 	 *
