@@ -6,7 +6,9 @@ import java.awt.Dimension;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 
+import main.java.com.ubo.tp.message.ihm.channel.ChannelComponent;
 import main.java.com.ubo.tp.message.ihm.profile.ProfileComponent;
 import main.java.com.ubo.tp.message.ihm.user.UserComponent;
 
@@ -22,14 +24,14 @@ public class HomeView extends JPanel {
     /**
      * Constructeur.
      */
-    public HomeView(ProfileComponent profileComponent, UserComponent userComponent) {
-        initComponents(profileComponent, userComponent);
+    public HomeView(ProfileComponent profileComponent, UserComponent userComponent, ChannelComponent channelComponent) {
+        initComponents(profileComponent, userComponent, channelComponent);
     }
 
     /**
      * Initialisation des composants.
      */
-    private void initComponents(ProfileComponent profileComponent, UserComponent userComponent) {
+    private void initComponents(ProfileComponent profileComponent, UserComponent userComponent, ChannelComponent channelComponent) {
         setLayout(new BorderLayout());
 
         // === Header ===
@@ -38,16 +40,22 @@ public class HomeView extends JPanel {
         profilePanel.add(profileComponent.getView());
         add(Theme.createHeaderBar(mHeaderLabel, profilePanel), BorderLayout.NORTH);
 
-        // === Sidebar gauche (utilisateurs) ===
-        JPanel sidebarPanel = userComponent.getView();
-        sidebarPanel.setPreferredSize(new Dimension(250, 0));
+        // === Sidebar gauche (onglets Utilisateurs + Canaux) ===
+        JTabbedPane sidebarTabs = new JTabbedPane();
+        sidebarTabs.setFont(Theme.FONT_SUBTITLE);
+        sidebarTabs.setBackground(Theme.SIDEBAR);
+        sidebarTabs.addTab("Utilisateurs", userComponent.getView());
+        sidebarTabs.addTab("Canaux", channelComponent.getView());
+        JPanel sidebarWrapper = new JPanel(new BorderLayout());
+        sidebarWrapper.setPreferredSize(new Dimension(260, 0));
+        sidebarWrapper.add(sidebarTabs, BorderLayout.CENTER);
 
         // === Zone centrale (contenu futur : messages, channels...) ===
         mCenterContent = Theme.createPlaceholderPanel("Selectionnez un utilisateur ou un canal");
 
         // === SplitPane : sidebar | contenu ===
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sidebarPanel, mCenterContent);
-        splitPane.setDividerLocation(250);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sidebarWrapper, mCenterContent);
+        splitPane.setDividerLocation(260);
         splitPane.setDividerSize(3);
         splitPane.setBorder(null);
 

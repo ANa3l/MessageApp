@@ -105,6 +105,13 @@ public class Channel extends AbstractMessageAppObject implements IMessageRecipie
 	}
 
 	/**
+	 * @return true si le canal est prive.
+	 */
+	public boolean isPrivate() {
+		return mPrivate;
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	@Override

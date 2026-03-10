@@ -15,6 +15,9 @@ import main.java.com.ubo.tp.message.ihm.profile.IProfileObserver;
 import main.java.com.ubo.tp.message.ihm.profile.ProfileComponent;
 import main.java.com.ubo.tp.message.ihm.profile.editor.IProfileEditorObserver;
 import main.java.com.ubo.tp.message.ihm.profile.editor.ProfileEditorComponent;
+import main.java.com.ubo.tp.message.ihm.channel.ChannelComponent;
+import main.java.com.ubo.tp.message.ihm.channel.IChannelObserver;
+import main.java.com.ubo.tp.message.datamodel.Channel;
 import main.java.com.ubo.tp.message.ihm.register.IRegisterObserver;
 import main.java.com.ubo.tp.message.ihm.register.RegisterComponent;
 import main.java.com.ubo.tp.message.ihm.user.UserComponent;
@@ -32,6 +35,7 @@ public class MessageAppMainView extends JPanel {
     private ProfileComponent mProfileComponent;
     private ProfileEditorComponent mProfileEditorComponent;
     private UserComponent mUserComponent;
+    private ChannelComponent mChannelComponent;
     private HomeView mHomeView;
 
     /**
@@ -121,8 +125,17 @@ public class MessageAppMainView extends JPanel {
         // Composant User
         mUserComponent = new UserComponent(mDataManager, mDatabase);
 
+        // Composant Channel
+        mChannelComponent = new ChannelComponent(mDataManager, mDatabase);
+        mChannelComponent.addObserver(new IChannelObserver() {
+            @Override
+            public void notifyChannelSelected(Channel selectedChannel) {
+                // TODO étape suivante : afficher les messages du canal
+            }
+        });
+
         // Vue Home
-        mHomeView = new HomeView(mProfileComponent, mUserComponent);
+        mHomeView = new HomeView(mProfileComponent, mUserComponent, mChannelComponent);
 
         // Affichage initial
         showLoginView();
@@ -172,6 +185,7 @@ public class MessageAppMainView extends JPanel {
         mProfileComponent.setConnectedUser(connectedUser);
         mProfileEditorComponent.setConnectedUser(connectedUser);
         mUserComponent.setConnectedUser(connectedUser);
+        mChannelComponent.setConnectedUser(connectedUser);
         mHomeView.resetCenterContent();
         removeAll();
         add(mHomeView, BorderLayout.CENTER);
