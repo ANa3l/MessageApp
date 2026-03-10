@@ -1,7 +1,7 @@
 package main.java.com.ubo.tp.message.ihm.login;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JOptionPane;
 
@@ -9,71 +9,70 @@ import main.java.com.ubo.tp.message.core.DataManager;
 import main.java.com.ubo.tp.message.datamodel.User;
 
 /**
- * Contrôleur du composant de login.
+ * Controleur du composant de login.
+ * Gere la logique de connexion et notifie les observers.
  */
 public class LoginController {
-    
+
     private LoginView mView;
     private DataManager mDataManager;
-    private LoginComponent mComponent;
-    
+    private List<ILoginObserver> mObservers;
+
     /**
      * Constructeur.
      */
-    public LoginController(LoginView view, DataManager dataManager, LoginComponent component) {
+    public LoginController(LoginView view, DataManager dataManager) {
         this.mView = view;
         this.mDataManager = dataManager;
-        this.mComponent = component;
-        initListeners();
+        this.mObservers = new ArrayList<>();
     }
-    
-    /**
-     * Initialisation des listeners.
-     */
-    private void initListeners() {
-        mView.addLoginListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleLogin();
-            }
-        });
-        
-        mView.addCreateAccountListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mComponent.notifyRegisterRequest();
-            }
-        });
-    }
-    
+
     /**
      * Gestion de la connexion.
      * SRS-MAP-USR-004 : Connexion sur compte existant
      */
-    private void handleLogin() {
+    public void handleLogin() {
         String tag = mView.getTagValue();
-        String password = mView.getPasswordValue(); // ← Ajout
-        
+        String password = mView.getPasswordValue();
+
         // Validation
         if (tag.isEmpty()) {
             showError("Le tag est obligatoire.");
             return;
         }
-        
+
         if (password.isEmpty()) {
             showError("Le mot de passe est obligatoire.");
             return;
         }
-        
+
         User user = findUserByTag(tag);
-        
-        // Vérification tag + mot de passe
+
+        // Verification tag + mot de passe
         if (user != null && user.getUserPassword().equals(password)) {
             mView.clearFields();
-            mComponent.notifyLogin(user);
+            for (ILoginObserver observer : mObservers) {
+                observer.notifyLogin(user);
+            }
         } else {
             showError("Tag ou mot de passe incorrect.");
         }
+    }
+
+    /**
+     * Gestion de la demande de creation de compte.
+     */
+    public void handleRegisterRequest() {
+        for (ILoginObserver observer : mObservers) {
+            observer.notifyRegisterRequest();
+        }
+    }
+
+    /**
+     * Ajoute un observateur.
+     */
+    public void addObserver(ILoginObserver observer) {
+        mObservers.add(observer);
     }
     
     /**
@@ -95,10 +94,4 @@ public class LoginController {
         JOptionPane.showMessageDialog(mView, message, "Erreur", JOptionPane.ERROR_MESSAGE);
     }
     
-    /**
-     * Affiche un message d'information.
-     */
-    private void showInfo(String message) {
-        JOptionPane.showMessageDialog(mView, message, "Information", JOptionPane.INFORMATION_MESSAGE);
-    }
 }
