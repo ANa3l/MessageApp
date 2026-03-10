@@ -23,6 +23,7 @@ public class UserController implements IDatabaseObserver {
     private DataManager mDataManager;
     private String mSearchFilter = "";
     private User mConnectedUser;
+    private final List<IUserObserver> mObservers = new ArrayList<>();
 
     /**
      * Constructeur.
@@ -39,6 +40,16 @@ public class UserController implements IDatabaseObserver {
     public void setSearchFilter(String filter) {
         this.mSearchFilter = filter.trim().toLowerCase();
         refreshUserList();
+    }
+
+    public void addObserver(IUserObserver observer) {
+        mObservers.add(observer);
+    }
+
+    public void handleUserSelected(User user) {
+        for (IUserObserver o : mObservers) {
+            o.notifyUserSelected(user);
+        }
     }
 
     /**

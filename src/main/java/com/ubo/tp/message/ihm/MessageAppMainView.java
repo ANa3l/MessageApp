@@ -22,8 +22,11 @@ import main.java.com.ubo.tp.message.ihm.channel.IChannelDetailObserver;
 import main.java.com.ubo.tp.message.ihm.channel.creator.ChannelCreatorComponent;
 import main.java.com.ubo.tp.message.ihm.channel.creator.IChannelCreatorObserver;
 import main.java.com.ubo.tp.message.datamodel.Channel;
+import main.java.com.ubo.tp.message.ihm.message.MessageComponent;
+import main.java.com.ubo.tp.message.datamodel.IMessageRecipient;
 import main.java.com.ubo.tp.message.ihm.register.IRegisterObserver;
 import main.java.com.ubo.tp.message.ihm.register.RegisterComponent;
+import main.java.com.ubo.tp.message.ihm.user.IUserObserver;
 import main.java.com.ubo.tp.message.ihm.user.UserComponent;
 
 /**
@@ -42,6 +45,7 @@ public class MessageAppMainView extends JPanel {
     private ChannelComponent mChannelComponent;
     private ChannelCreatorComponent mChannelCreatorComponent;
     private ChannelDetailComponent mChannelDetailComponent;
+    private MessageComponent mMessageComponent;
     private HomeView mHomeView;
 
     /**
@@ -130,13 +134,19 @@ public class MessageAppMainView extends JPanel {
 
         // Composant User
         mUserComponent = new UserComponent(mDataManager, mDatabase);
+        mUserComponent.addObserver(new IUserObserver() {
+            @Override
+            public void notifyUserSelected(User selectedUser) {
+                showConversation(selectedUser);
+            }
+        });
 
         // Composant Channel
         mChannelComponent = new ChannelComponent(mDataManager, mDatabase);
         mChannelComponent.addObserver(new IChannelObserver() {
             @Override
             public void notifyChannelSelected(Channel selectedChannel) {
-                showChannelDetail(selectedChannel);
+                showConversation(selectedChannel);
             }
 
             @Override
@@ -170,6 +180,29 @@ public class MessageAppMainView extends JPanel {
             @Override
             public void notifyChannelLeft() {
                 mHomeView.resetCenterContent();
+            }
+        });
+        mChannelDetailComponent.addCloseListener(e -> {
+            IMessageRecipient r = mMessageComponent.getRecipient();
+            if (r != null) {
+                showConversation(r);
+            } else {
+                mHomeView.resetCenterContent();
+            }
+        });
+
+        // Composant Messages
+        mMessageComponent = new MessageComponent(mDataManager, mDatabase);
+        mMessageComponent.addObserver(new main.java.com.ubo.tp.message.ihm.message.IMessageObserver() {
+            @Override
+            public void notifyConversationClosed() {
+                mHomeView.resetCenterContent();
+            }
+        });
+        mMessageComponent.addSettingsListener(e -> {
+            IMessageRecipient r = mMessageComponent.getRecipient();
+            if (r instanceof Channel) {
+                showChannelDetail((Channel) r);
             }
         });
 
@@ -245,6 +278,14 @@ public class MessageAppMainView extends JPanel {
      */
     private void showChannelCreator() {
         mHomeView.setCenterContent(mChannelCreatorComponent.getView());
+    }
+
+    /**
+     * Ouvre la conversation avec un destinataire (User ou Channel).
+     */
+    private void showConversation(IMessageRecipient recipient) {
+        mMessageComponent.setRecipient(recipient, mSession.getConnectedUser());
+        mHomeView.setCenterContent(mMessageComponent.getView());
     }
 
     /**

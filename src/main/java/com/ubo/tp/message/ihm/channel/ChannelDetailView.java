@@ -3,6 +3,7 @@ package main.java.com.ubo.tp.message.ihm.channel;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -46,6 +47,7 @@ public class ChannelDetailView extends JPanel {
     private JButton mRemoveMemberButton;
     private JComboBox<User> mAddMemberCombo;
     private JPanel mAddRow;
+    private JButton mCloseButton;
 
     public ChannelDetailView() {
         initComponents();
@@ -59,6 +61,23 @@ public class ChannelDetailView extends JPanel {
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setBackground(Theme.BACKGROUND);
         content.setBorder(new EmptyBorder(20, 24, 16, 24));
+
+        // === Bouton fermer ===
+        mCloseButton = new JButton("\u2715");
+        mCloseButton.setFont(Theme.FONT_TITLE);
+        mCloseButton.setForeground(Theme.TEXT_SECONDARY);
+        mCloseButton.setBackground(Theme.BACKGROUND);
+        mCloseButton.setBorderPainted(false);
+        mCloseButton.setFocusPainted(false);
+        mCloseButton.setContentAreaFilled(false);
+        mCloseButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        mCloseButton.setToolTipText("Fermer");
+        JPanel closeRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        closeRow.setBackground(Theme.BACKGROUND);
+        closeRow.setAlignmentX(LEFT_ALIGNMENT);
+        closeRow.add(mCloseButton);
+        content.add(closeRow);
+        content.add(Box.createVerticalStrut(4));
 
         // === Header ===
         mNameLabel = new JLabel(" ");
@@ -204,4 +223,5 @@ public class ChannelDetailView extends JPanel {
     public void addLeaveListener(ActionListener l) { mLeaveButton.addActionListener(l); }
     public void addAddMemberListener(ActionListener l) { mAddMemberButton.addActionListener(l); }
     public void addRemoveMemberListener(ActionListener l) { mRemoveMemberButton.addActionListener(l); }
+    public void addCloseListener(ActionListener l) { mCloseButton.addActionListener(l); }
 }

@@ -26,6 +26,10 @@ public class ChannelDetailComponent {
         mView.addRemoveMemberListener(e -> mController.handleRemoveMember());
     }
 
+    public void addCloseListener(java.awt.event.ActionListener listener) {
+        mView.addCloseListener(listener);
+    }
+
     public void setChannel(Channel channel, User connectedUser) {
         mController.setChannel(channel, connectedUser);
     }

@@ -4,6 +4,9 @@ import javax.swing.JPanel;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+
 import main.java.com.ubo.tp.message.core.DataManager;
 import main.java.com.ubo.tp.message.core.database.IDatabase;
 import main.java.com.ubo.tp.message.datamodel.User;
@@ -28,6 +31,19 @@ public class UserComponent {
         // Enregistrer le controller comme observateur de la DB
         database.addObserver(mController);
 
+        // Câblage sélection : clic sur un utilisateur -> contrôleur
+        mView.getUserList().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    User selected = mView.getSelectedUser();
+                    if (selected != null) {
+                        mController.handleUserSelected(selected);
+                    }
+                }
+            }
+        });
+
         // Cablage recherche : champ texte -> controller
         mView.getSearchField().getDocument().addDocumentListener(new DocumentListener() {
             @Override
@@ -45,6 +61,13 @@ public class UserComponent {
                 mController.setSearchFilter(mView.getSearchField().getText());
             }
         });
+    }
+
+    /**
+     * Ajoute un observateur sur les événements utilisateur.
+     */
+    public void addObserver(IUserObserver observer) {
+        mController.addObserver(observer);
     }
 
     /**
