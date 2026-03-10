@@ -452,6 +452,24 @@ public class EntityManager implements IWatchableDirectoryObserver {
 	}
 
 	/**
+	 * Suppression du fichier correspondant a l'utilisateur.
+	 *
+	 * @param user
+	 */
+	public void deleteUserFile(User user) {
+		if (mDirectoryPath != null) {
+			String filePath = mDirectoryPath + Constants.SYSTEM_FILE_SEPARATOR
+					+ user.getUuid() + "." + Constants.USER_FILE_EXTENSION;
+			File userFile = new File(filePath);
+			if (userFile.exists()) {
+				userFile.delete();
+			}
+		} else {
+			throw new RuntimeException("Le répertoire d'échange n'est pas configuré !");
+		}
+	}
+
+	/**
 	 * Génération du fichier correspondant à canal.
 	 *
 	 * @param user

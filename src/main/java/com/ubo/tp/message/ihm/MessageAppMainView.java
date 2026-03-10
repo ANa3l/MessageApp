@@ -13,6 +13,8 @@ import main.java.com.ubo.tp.message.ihm.login.ILoginObserver;
 import main.java.com.ubo.tp.message.ihm.login.LoginComponent;
 import main.java.com.ubo.tp.message.ihm.profile.IProfileObserver;
 import main.java.com.ubo.tp.message.ihm.profile.ProfileComponent;
+import main.java.com.ubo.tp.message.ihm.profile.editor.IProfileEditorObserver;
+import main.java.com.ubo.tp.message.ihm.profile.editor.ProfileEditorComponent;
 import main.java.com.ubo.tp.message.ihm.register.IRegisterObserver;
 import main.java.com.ubo.tp.message.ihm.register.RegisterComponent;
 import main.java.com.ubo.tp.message.ihm.user.UserComponent;
@@ -28,6 +30,7 @@ public class MessageAppMainView extends JPanel {
     private LoginComponent mLoginComponent;
     private RegisterComponent mRegisterComponent;
     private ProfileComponent mProfileComponent;
+    private ProfileEditorComponent mProfileEditorComponent;
     private UserComponent mUserComponent;
     private HomeView mHomeView;
 
@@ -88,7 +91,30 @@ public class MessageAppMainView extends JPanel {
 
             @Override
             public void notifyProfileRequest() {
-                // TODO : afficher le profil utilisateur
+                showProfileEditor();
+            }
+        });
+
+        // Composant ProfileEditor
+        mProfileEditorComponent = new ProfileEditorComponent(mDataManager);
+        mProfileEditorComponent.addObserver(new IProfileEditorObserver() {
+            @Override
+            public void notifyNameChanged(String newName) {
+                // Mettre a jour l'avatar du ProfileComponent
+                User user = mSession.getConnectedUser();
+                if (user != null) {
+                    mProfileComponent.setConnectedUser(user);
+                }
+            }
+
+            @Override
+            public void notifyAccountDeleted() {
+                mSession.disconnect();
+            }
+
+            @Override
+            public void notifyBackToHome() {
+                mHomeView.resetCenterContent();
             }
         });
 
@@ -144,10 +170,19 @@ public class MessageAppMainView extends JPanel {
      */
     public void showHomeView(User connectedUser) {
         mProfileComponent.setConnectedUser(connectedUser);
+        mProfileEditorComponent.setConnectedUser(connectedUser);
         mUserComponent.setConnectedUser(connectedUser);
+        mHomeView.resetCenterContent();
         removeAll();
         add(mHomeView, BorderLayout.CENTER);
         revalidate();
         repaint();
+    }
+
+    /**
+     * Affiche l'editeur de profil dans la zone centrale.
+     */
+    private void showProfileEditor() {
+        mHomeView.setCenterContent(mProfileEditorComponent.getView());
     }
 }

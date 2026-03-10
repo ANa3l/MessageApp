@@ -60,4 +60,26 @@ public class HomeView extends JPanel {
     public JPanel getCenterContent() {
         return mCenterContent;
     }
+
+    /**
+     * Remplace le contenu de la zone centrale.
+     */
+    public void setCenterContent(JPanel content) {
+        mCenterContent.removeAll();
+        mCenterContent.add(content, BorderLayout.CENTER);
+        mCenterContent.revalidate();
+        mCenterContent.repaint();
+    }
+
+    /**
+     * Remet le contenu par defaut dans la zone centrale.
+     */
+    public void resetCenterContent() {
+        mCenterContent.removeAll();
+        mCenterContent.setLayout(new BorderLayout());
+        JPanel placeholder = Theme.createPlaceholderPanel("Selectionnez un utilisateur ou un canal");
+        mCenterContent.add(placeholder, BorderLayout.CENTER);
+        mCenterContent.revalidate();
+        mCenterContent.repaint();
+    }
 }
