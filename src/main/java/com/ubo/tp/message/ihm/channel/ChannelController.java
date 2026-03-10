@@ -60,6 +60,15 @@ public class ChannelController implements IDatabaseObserver {
         }
     }
 
+    /**
+     * Notifie les observateurs que l'utilisateur veut créer un canal.
+     */
+    public void handleCreateChannelRequest() {
+        for (IChannelObserver observer : mObservers) {
+            observer.notifyCreateChannelRequest();
+        }
+    }
+
     // ===================================================================
     // Logique interne
     // ===================================================================

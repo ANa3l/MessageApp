@@ -8,11 +8,13 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.event.ActionListener;
 import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -35,6 +37,7 @@ public class ChannelView extends JPanel {
     private JList<Channel> mChannelList;
     private DefaultListModel<Channel> mListModel;
     private JTextField mSearchField;
+    private JButton mCreateButton;
 
     public ChannelView() {
         initComponents();
@@ -49,14 +52,24 @@ public class ChannelView extends JPanel {
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
         headerPanel.setBackground(Theme.SIDEBAR);
 
+        // Titre + bouton "+ Créer"
+        JPanel titleRow = new JPanel(new BorderLayout());
+        titleRow.setBackground(Theme.SIDEBAR);
+        titleRow.setBorder(new EmptyBorder(10, 14, 4, 10));
+        titleRow.setAlignmentX(LEFT_ALIGNMENT);
+
         JLabel titleLabel = new JLabel("Canaux");
         titleLabel.setFont(Theme.FONT_SUBTITLE);
         titleLabel.setForeground(Theme.TEXT_SECONDARY);
-        titleLabel.setBorder(new EmptyBorder(12, 14, 6, 14));
-        titleLabel.setOpaque(true);
-        titleLabel.setBackground(Theme.SIDEBAR);
-        titleLabel.setAlignmentX(LEFT_ALIGNMENT);
-        headerPanel.add(titleLabel);
+        titleRow.add(titleLabel, BorderLayout.CENTER);
+
+        mCreateButton = new JButton("+");
+        Theme.styleButton(mCreateButton, Theme.ACCENT, java.awt.Color.WHITE);
+        mCreateButton.setPreferredSize(new Dimension(26, 22));
+        mCreateButton.setToolTipText("Creer un canal");
+        titleRow.add(mCreateButton, BorderLayout.EAST);
+
+        headerPanel.add(titleRow);
 
         JPanel searchPanel = new JPanel(new BorderLayout());
         searchPanel.setBackground(Theme.SIDEBAR);
@@ -105,6 +118,10 @@ public class ChannelView extends JPanel {
 
     public JList<Channel> getChannelList() {
         return mChannelList;
+    }
+
+    public void addCreateChannelListener(ActionListener l) {
+        mCreateButton.addActionListener(l);
     }
 
     // ===================================================================

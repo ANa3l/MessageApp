@@ -44,6 +44,9 @@ public class ChannelComponent {
             }
         });
 
+        // Câblage bouton "+ Créer" -> contrôleur
+        mView.addCreateChannelListener(e -> mController.handleCreateChannelRequest());
+
         // Câblage sélection : clic sur un canal -> contrôleur
         mView.getChannelList().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
