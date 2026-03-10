@@ -17,6 +17,8 @@ import main.java.com.ubo.tp.message.ihm.profile.editor.IProfileEditorObserver;
 import main.java.com.ubo.tp.message.ihm.profile.editor.ProfileEditorComponent;
 import main.java.com.ubo.tp.message.ihm.channel.ChannelComponent;
 import main.java.com.ubo.tp.message.ihm.channel.IChannelObserver;
+import main.java.com.ubo.tp.message.ihm.channel.ChannelDetailComponent;
+import main.java.com.ubo.tp.message.ihm.channel.IChannelDetailObserver;
 import main.java.com.ubo.tp.message.ihm.channel.creator.ChannelCreatorComponent;
 import main.java.com.ubo.tp.message.ihm.channel.creator.IChannelCreatorObserver;
 import main.java.com.ubo.tp.message.datamodel.Channel;
@@ -39,6 +41,7 @@ public class MessageAppMainView extends JPanel {
     private UserComponent mUserComponent;
     private ChannelComponent mChannelComponent;
     private ChannelCreatorComponent mChannelCreatorComponent;
+    private ChannelDetailComponent mChannelDetailComponent;
     private HomeView mHomeView;
 
     /**
@@ -133,7 +136,7 @@ public class MessageAppMainView extends JPanel {
         mChannelComponent.addObserver(new IChannelObserver() {
             @Override
             public void notifyChannelSelected(Channel selectedChannel) {
-                // TODO étape suivante : afficher les messages du canal
+                showChannelDetail(selectedChannel);
             }
 
             @Override
@@ -152,6 +155,20 @@ public class MessageAppMainView extends JPanel {
 
             @Override
             public void notifyCreationCancelled() {
+                mHomeView.resetCenterContent();
+            }
+        });
+
+        // Composant ChannelDetail
+        mChannelDetailComponent = new ChannelDetailComponent(mDataManager);
+        mChannelDetailComponent.addObserver(new IChannelDetailObserver() {
+            @Override
+            public void notifyChannelDeleted() {
+                mHomeView.resetCenterContent();
+            }
+
+            @Override
+            public void notifyChannelLeft() {
                 mHomeView.resetCenterContent();
             }
         });
@@ -228,5 +245,13 @@ public class MessageAppMainView extends JPanel {
      */
     private void showChannelCreator() {
         mHomeView.setCenterContent(mChannelCreatorComponent.getView());
+    }
+
+    /**
+     * Affiche le detail d'un canal dans la zone centrale.
+     */
+    private void showChannelDetail(Channel channel) {
+        mChannelDetailComponent.setChannel(channel, mSession.getConnectedUser());
+        mHomeView.setCenterContent(mChannelDetailComponent.getView());
     }
 }
