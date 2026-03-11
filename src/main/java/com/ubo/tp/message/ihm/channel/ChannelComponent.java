@@ -73,6 +73,20 @@ public class ChannelComponent {
     }
 
     /**
+     * Incremente le compteur de messages non lus pour un canal.
+     */
+    public void addUnread(java.util.UUID channelUuid) {
+        mView.addUnread(channelUuid);
+    }
+
+    /**
+     * Supprime le compteur de messages non lus pour un canal.
+     */
+    public void clearUnread(java.util.UUID channelUuid) {
+        mView.clearUnread(channelUuid);
+    }
+
+    /**
      * Retourne le panel graphique du composant.
      */
     public JPanel getView() {

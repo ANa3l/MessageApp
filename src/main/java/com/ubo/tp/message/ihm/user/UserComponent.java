@@ -78,6 +78,20 @@ public class UserComponent {
     }
 
     /**
+     * Ajoute un indicateur non lu pour un utilisateur.
+     */
+    public void addUnread(java.util.UUID userUuid) {
+        mView.addUnread(userUuid);
+    }
+
+    /**
+     * Supprime l'indicateur non lu pour un utilisateur.
+     */
+    public void clearUnread(java.util.UUID userUuid) {
+        mView.clearUnread(userUuid);
+    }
+
+    /**
      * Retourne le panel graphique du composant.
      */
     public JPanel getView() {

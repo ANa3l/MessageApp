@@ -1,6 +1,7 @@
 package main.java.com.ubo.tp.message.ihm.message;
 
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -13,8 +14,13 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
+
+import javax.swing.Timer;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -25,6 +31,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
@@ -38,13 +45,21 @@ import main.java.com.ubo.tp.message.ihm.Theme;
  */
 public class MessageView extends JPanel {
 
+    private static final String CARD_CONVERSATION = "conversation";
+    private static final String CARD_SEARCH = "search";
+
     private JLabel mHeaderLabel;
-    private JPanel mHeaderPanel;
     private JButton mSettingsButton;
+    private JButton mSearchButton;
     private JPanel mMessagesPanel;
     private JScrollPane mScrollPane;
-    private JTextArea mInputField;
-    private JButton mSendButton;
+    private Consumer<Message> mDeleteListener;
+
+    private CardLayout mCardLayout;
+    private JPanel mCardPanel;
+    private MessageSearchView mSearchView;
+    private MessageInputView mInputView;
+    private Map<Long, JPanel> mMessageRowMap = new HashMap<>();
 
     public MessageView() {
         initComponents();
@@ -54,18 +69,24 @@ public class MessageView extends JPanel {
         setLayout(new BorderLayout());
         setBackground(Theme.BACKGROUND);
 
-        // === Header (cliquable pour les canaux) ===
-        mHeaderPanel = new JPanel(new BorderLayout());
-        mHeaderPanel.setBackground(Theme.BACKGROUND);
-        mHeaderPanel.setBorder(BorderFactory.createCompoundBorder(
+        mCardLayout = new CardLayout();
+        mCardPanel = new JPanel(mCardLayout);
+
+        // === CARD 1 : Vue conversation ===
+        JPanel conversationPanel = new JPanel(new BorderLayout());
+        conversationPanel.setBackground(Theme.BACKGROUND);
+
+        // --- Header ---
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(Theme.BACKGROUND);
+        headerPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.BORDER),
                 new EmptyBorder(10, 15, 10, 15)));
         mHeaderLabel = new JLabel("Sélectionnez un contact");
         mHeaderLabel.setFont(Theme.FONT_TITLE);
         mHeaderLabel.setForeground(Theme.TEXT_PRIMARY);
-        mHeaderPanel.add(mHeaderLabel, BorderLayout.CENTER);
+        headerPanel.add(mHeaderLabel, BorderLayout.CENTER);
 
-        // Bouton paramètres (visible uniquement pour les canaux)
         mSettingsButton = new JButton("\u2699");
         mSettingsButton.setFont(Theme.FONT_TITLE);
         mSettingsButton.setForeground(Theme.TEXT_SECONDARY);
@@ -76,11 +97,25 @@ public class MessageView extends JPanel {
         mSettingsButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         mSettingsButton.setToolTipText("Paramètres du canal");
         mSettingsButton.setVisible(false);
-        mHeaderPanel.add(mSettingsButton, BorderLayout.EAST);
 
-        add(mHeaderPanel, BorderLayout.NORTH);
+        mSearchButton = new JButton("\uD83D\uDD0D");
+        mSearchButton.setFont(Theme.FONT_TITLE);
+        mSearchButton.setForeground(Theme.TEXT_SECONDARY);
+        mSearchButton.setBackground(Theme.BACKGROUND);
+        mSearchButton.setBorderPainted(false);
+        mSearchButton.setFocusPainted(false);
+        mSearchButton.setContentAreaFilled(false);
+        mSearchButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        mSearchButton.setToolTipText("Rechercher");
 
-        // === Zone messages ===
+        JPanel headerButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        headerButtons.setBackground(Theme.BACKGROUND);
+        headerButtons.add(mSearchButton);
+        headerButtons.add(mSettingsButton);
+        headerPanel.add(headerButtons, BorderLayout.EAST);
+        conversationPanel.add(headerPanel, BorderLayout.NORTH);
+
+        // --- Zone messages ---
         mMessagesPanel = new JPanel();
         mMessagesPanel.setLayout(new BoxLayout(mMessagesPanel, BoxLayout.Y_AXIS));
         mMessagesPanel.setBackground(Theme.BACKGROUND);
@@ -90,57 +125,56 @@ public class MessageView extends JPanel {
         mScrollPane.setBorder(null);
         mScrollPane.getViewport().setBackground(Theme.BACKGROUND);
         mScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        add(mScrollPane, BorderLayout.CENTER);
+        conversationPanel.add(mScrollPane, BorderLayout.CENTER);
 
-        // === Zone saisie ===
-        JPanel inputPanel = new JPanel(new BorderLayout());
-        inputPanel.setBackground(Theme.BACKGROUND);
-        inputPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(1, 0, 0, 0, Theme.BORDER),
-                new EmptyBorder(10, 15, 10, 15)));
+        // --- Zone saisie (vue séparée) ---
+        mInputView = new MessageInputView();
+        conversationPanel.add(mInputView, BorderLayout.SOUTH);
 
-        mInputField = new JTextArea(3, 0);
-        mInputField.setFont(Theme.FONT_BODY);
-        mInputField.setLineWrap(true);
-        mInputField.setWrapStyleWord(true);
-        mInputField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Theme.BORDER),
-                new EmptyBorder(6, 8, 6, 8)));
-        JScrollPane inputScroll = new JScrollPane(mInputField);
-        inputScroll.setBorder(null);
-        inputPanel.add(inputScroll, BorderLayout.CENTER);
+        // === CARD 2 : Mode recherche (vue séparée) ===
+        mSearchView = new MessageSearchView(this::exitSearchMode);
+        mSearchView.setOnResultClick(this::scrollToMessage);
 
-        mSendButton = new JButton("Envoyer");
-        mSendButton.setFont(Theme.FONT_BUTTON);
-        mSendButton.setBackground(Theme.ACCENT);
-        mSendButton.setForeground(Color.WHITE);
-        mSendButton.setFocusPainted(false);
-        mSendButton.setOpaque(true);
-        mSendButton.setBorderPainted(false);
-        mSendButton.setBorder(new EmptyBorder(8, 18, 8, 18));
-        mSendButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-
-        JPanel sendWrapper = new JPanel(new BorderLayout());
-        sendWrapper.setBackground(Theme.BACKGROUND);
-        sendWrapper.setBorder(new EmptyBorder(0, 10, 0, 0));
-        sendWrapper.add(mSendButton, BorderLayout.SOUTH);
-        inputPanel.add(sendWrapper, BorderLayout.EAST);
-
-        add(inputPanel, BorderLayout.SOUTH);
+        mCardPanel.add(conversationPanel, CARD_CONVERSATION);
+        mCardPanel.add(mSearchView, CARD_SEARCH);
+        add(mCardPanel, BorderLayout.CENTER);
     }
 
-    /**
-     * Met à jour le titre de la conversation dans le header.
-     */
+    // === Gestion du mode recherche (délégation) ===
+
+    public void enterSearchMode() {
+        mSearchView.getSearchField().setText("");
+        mSearchView.showPlaceholder();
+        mCardLayout.show(mCardPanel, CARD_SEARCH);
+        SwingUtilities.invokeLater(() -> mSearchView.getSearchField().requestFocusInWindow());
+    }
+
+    public void exitSearchMode() {
+        mSearchView.getSearchField().setText("");
+        mCardLayout.show(mCardPanel, CARD_CONVERSATION);
+    }
+
+    public void updateSearchResults(List<Message> results, String query) {
+        mSearchView.updateSearchResults(results, query);
+    }
+
+    // === Méthodes publiques ===
+
     public void setHeader(String title) {
         mHeaderLabel.setText(title);
     }
 
-    /**
-     * Affiche la liste des messages de la conversation.
-     */
+    public void setRecipientName(String name) {
+        mSearchView.setRecipientName(name);
+    }
+
+    public void setDeleteListener(Consumer<Message> listener) {
+        mDeleteListener = listener;
+    }
+
     public void updateMessages(List<Message> messages, UUID connectedUserUuid) {
         mMessagesPanel.removeAll();
+        mMessageRowMap.clear();
         if (messages.isEmpty()) {
             JLabel empty = new JLabel("Aucun message. Commencez la conversation !");
             empty.setFont(Theme.FONT_BODY);
@@ -153,24 +187,43 @@ public class MessageView extends JPanel {
         } else {
             for (Message msg : messages) {
                 boolean isMine = msg.getSender().getUuid().equals(connectedUserUuid);
-                mMessagesPanel.add(buildMessageBubble(msg, isMine));
+                JPanel row = buildMessageBubble(msg, isMine);
+                mMessageRowMap.put(msg.getEmissionDate(), row);
+                mMessagesPanel.add(row);
                 mMessagesPanel.add(Box.createRigidArea(new Dimension(0, 3)));
             }
         }
         mMessagesPanel.revalidate();
         mMessagesPanel.repaint();
-        // Scroll automatique vers le bas après rendu
         SwingUtilities.invokeLater(() -> {
             JScrollBar bar = mScrollPane.getVerticalScrollBar();
             bar.setValue(bar.getMaximum());
         });
     }
 
+    public void scrollToMessage(Message message) {
+        mCardLayout.show(mCardPanel, CARD_CONVERSATION);
+        JPanel targetRow = mMessageRowMap.get(message.getEmissionDate());
+        if (targetRow == null) return;
+        SwingUtilities.invokeLater(() -> SwingUtilities.invokeLater(() -> {
+            targetRow.scrollRectToVisible(targetRow.getBounds());
+            javax.swing.border.Border originalBorder = targetRow.getBorder();
+            targetRow.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(Theme.ACCENT, 2, true),
+                    new EmptyBorder(1, 1, 1, 1)));
+            Timer timer = new Timer(1500, e -> {
+                targetRow.setBorder(originalBorder);
+                targetRow.repaint();
+            });
+            timer.setRepeats(false);
+            timer.start();
+        }));
+    }
+
     private JPanel buildMessageBubble(Message msg, boolean isMine) {
         final Color bgColor = isMine ? Theme.ACCENT : new Color(240, 240, 245);
         final int arc = 14;
 
-        // Bulle avec coins arrondis
         JPanel bubble = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -185,7 +238,6 @@ public class MessageView extends JPanel {
         bubble.setOpaque(false);
         bubble.setBorder(new EmptyBorder(5, 10, 5, 10));
 
-        // Nom (seulement si pas moi)
         if (!isMine) {
             JLabel senderLabel = new JLabel(msg.getSender().getName());
             senderLabel.setFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 11));
@@ -194,10 +246,9 @@ public class MessageView extends JPanel {
             bubble.add(senderLabel);
         }
 
-        // Texte + heure sur une ligne
         String time = new SimpleDateFormat("HH:mm").format(new Date(msg.getEmissionDate()));
         String textHtml = "<html><body style='width:220px'>"
-                + escapeHtml(msg.getText())
+                + formatMessageText(msg.getText())
                 + " <span style='color:" + (isMine ? "#c8cdff" : "#aaa") + ";font-size:9px'>"
                 + time + "</span></body></html>";
         JLabel textLabel = new JLabel(textHtml);
@@ -206,16 +257,40 @@ public class MessageView extends JPanel {
         textLabel.setAlignmentX(LEFT_ALIGNMENT);
         bubble.add(textLabel);
 
-        // Contraindre la largeur max de la bulle
         bubble.setMaximumSize(new Dimension(320, Short.MAX_VALUE));
 
-        // Ligne : aligne la bulle à droite ou à gauche
         JPanel row = new JPanel();
         row.setLayout(new FlowLayout(isMine ? FlowLayout.RIGHT : FlowLayout.LEFT, 0, 0));
         row.setBackground(Theme.BACKGROUND);
         row.setOpaque(false);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, Short.MAX_VALUE));
         row.add(bubble);
+
+        if (isMine) {
+            JLabel deleteBtn = new JLabel("\u2715");
+            deleteBtn.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 11));
+            deleteBtn.setForeground(Theme.TEXT_LIGHT);
+            deleteBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            deleteBtn.setToolTipText("Supprimer");
+            deleteBtn.setBorder(new EmptyBorder(0, 4, 0, 0));
+            deleteBtn.setVisible(false);
+            deleteBtn.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (mDeleteListener != null) {
+                        mDeleteListener.accept(msg);
+                    }
+                }
+            });
+            row.add(deleteBtn);
+            row.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) { deleteBtn.setVisible(true); }
+                @Override
+                public void mouseExited(MouseEvent e) { deleteBtn.setVisible(false); }
+            });
+        }
+
         return row;
     }
 
@@ -226,20 +301,29 @@ public class MessageView extends JPanel {
                    .replace("\n", "<br>");
     }
 
+    private String formatMessageText(String text) {
+        String escaped = escapeHtml(text);
+        return escaped.replaceAll("@(\\w+)", "<b style='color:#4650c8'>@$1</b>");
+    }
+
     public String getMessageText() {
-        return mInputField.getText().trim();
+        return mInputView.getMessageText();
     }
 
     public void clearInput() {
-        mInputField.setText("");
+        mInputView.clearInput();
     }
 
     public void addSendListener(ActionListener listener) {
-        mSendButton.addActionListener(listener);
+        mInputView.addSendListener(listener);
     }
 
     public void addSettingsListener(ActionListener listener) {
         mSettingsButton.addActionListener(listener);
+    }
+
+    public void addSearchListener(ActionListener listener) {
+        mSearchButton.addActionListener(listener);
     }
 
     public void setSettingsVisible(boolean visible) {
@@ -247,6 +331,10 @@ public class MessageView extends JPanel {
     }
 
     public JTextArea getInputField() {
-        return mInputField;
+        return mInputView.getInputField();
+    }
+
+    public JTextField getSearchField() {
+        return mSearchView.getSearchField();
     }
 }

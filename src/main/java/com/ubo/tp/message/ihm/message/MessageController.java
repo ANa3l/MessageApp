@@ -34,22 +34,35 @@ public class MessageController implements IDatabaseObserver {
     }
 
     /**
+     * Définit l'utilisateur connecté (appelé dès la connexion pour les notifications).
+     */
+    public void setConnectedUser(User connectedUser) {
+        this.mConnectedUser = connectedUser;
+    }
+
+    /**
      * Définit la conversation active (destinataire + utilisateur connecté).
      */
     public void setRecipient(IMessageRecipient recipient, User connectedUser) {
         this.mRecipient = recipient;
         this.mConnectedUser = connectedUser;
+        mView.exitSearchMode();
 
         String title;
+        String recipientName;
         if (recipient instanceof Channel) {
             title = "# " + ((Channel) recipient).getName();
+            recipientName = ((Channel) recipient).getName();
         } else if (recipient instanceof User) {
             User u = (User) recipient;
             title = u.getName() + "  @" + u.getUserTag();
+            recipientName = u.getName();
         } else {
             title = recipient.getUuid().toString();
+            recipientName = title;
         }
         mView.setHeader(title);
+        mView.setRecipientName(recipientName);
         mView.setSettingsVisible(recipient instanceof Channel);
         refreshMessages();
     }
@@ -62,15 +75,73 @@ public class MessageController implements IDatabaseObserver {
     }
 
     /**
+     * Recherche les messages de la conversation courante contenant le texte donné.
+     * Retourne les résultats triés du plus récent au plus ancien (comme WhatsApp).
+     */
+    public List<Message> searchMessages(String query) {
+        List<Message> results = new ArrayList<>();
+        if (mRecipient == null || mConnectedUser == null || query == null || query.trim().isEmpty()) {
+            return results;
+        }
+        String lowerQuery = query.trim().toLowerCase();
+        UUID recipientUuid = mRecipient.getUuid();
+        for (Message msg : mDataManager.getMessages()) {
+            if (isInConversation(msg, recipientUuid)
+                    && msg.getText().toLowerCase().contains(lowerQuery)) {
+                results.add(msg);
+            }
+        }
+        // Tri du plus récent au plus ancien
+        results.sort((a, b) -> Long.compare(b.getEmissionDate(), a.getEmissionDate()));
+        return results;
+    }
+
+    /**
      * Envoie le message saisi dans le champ de saisie.
      */
     public void handleSend() {
         if (mRecipient == null || mConnectedUser == null) return;
         String text = mView.getMessageText();
-        if (text.isEmpty()) return;
+        if (text.isEmpty() || text.length() > 200) return;
         mDataManager.sendMessage(new Message(mConnectedUser, mRecipient.getUuid(), text));
         mView.clearInput();
         refreshMessages();
+    }
+
+    /**
+     * Supprime un message (uniquement si l'utilisateur en est l'auteur).
+     */
+    public void handleDeleteMessage(Message message) {
+        if (mConnectedUser == null) return;
+        if (message.getSender().getUuid().equals(mConnectedUser.getUuid())) {
+            mDataManager.deleteMessage(message);
+        }
+    }
+
+    /**
+     * Retourne la liste des utilisateurs mentionnables dans la conversation courante.
+     */
+    public List<User> getMentionableUsers() {
+        List<User> users = new ArrayList<>();
+        if (mRecipient instanceof Channel) {
+            Channel ch = (Channel) mRecipient;
+            if (ch.isPrivate()) {
+                users.addAll(ch.getUsers());
+            } else {
+                users.addAll(mDataManager.getUsers());
+            }
+        } else if (mRecipient instanceof User) {
+            users.add((User) mRecipient);
+        }
+        // Retirer l'utilisateur connecté et les inconnus
+        List<User> filtered = new ArrayList<>();
+        for (User u : users) {
+            if (!u.getUuid().equals(mConnectedUser.getUuid())
+                    && !u.getUuid().equals(main.java.com.ubo.tp.message.common.Constants.UNKNONWN_USER_UUID)) {
+                filtered.add(u);
+            }
+        }
+        return filtered;
     }
 
     private void refreshMessages() {
@@ -88,8 +159,6 @@ public class MessageController implements IDatabaseObserver {
 
     /**
      * Détermine si un message appartient à la conversation active.
-     * - Canal : le destinataire du message est l'UUID du canal.
-     * - Utilisateur : échange bidirectionnel entre moi et l'autre.
      */
     private boolean isInConversation(Message msg, UUID recipientUuid) {
         UUID sender = msg.getSender().getUuid();
@@ -97,7 +166,6 @@ public class MessageController implements IDatabaseObserver {
         if (mRecipient instanceof Channel) {
             return recipient.equals(recipientUuid);
         }
-        // User-to-user : messages dans les deux sens
         UUID myUuid = mConnectedUser.getUuid();
         return (sender.equals(myUuid) && recipient.equals(recipientUuid))
                 || (sender.equals(recipientUuid) && recipient.equals(myUuid));
@@ -110,6 +178,8 @@ public class MessageController implements IDatabaseObserver {
         if (mRecipient != null && isInConversation(addedMessage, mRecipient.getUuid())) {
             refreshMessages();
         }
+        // MSG-010 : Notification si DM ou mention
+        checkNotification(addedMessage);
     }
 
     @Override
@@ -122,6 +192,77 @@ public class MessageController implements IDatabaseObserver {
     @Override
     public void notifyMessageModified(Message modifiedMessage) {
         notifyMessageAdded(modifiedMessage);
+    }
+
+    /**
+     * Trouve un canal par son UUID dans la base.
+     */
+    private Channel findChannelByUuid(UUID uuid) {
+        for (Channel ch : mDataManager.getChannels()) {
+            if (ch.getUuid().equals(uuid)) {
+                return ch;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Verifie si l'utilisateur connecte a acces a un canal.
+     */
+    private boolean isUserInChannel(Channel channel) {
+        if (!channel.isPrivate()) {
+            return true;
+        }
+        if (channel.getCreator().getUuid().equals(mConnectedUser.getUuid())) {
+            return true;
+        }
+        for (User u : channel.getUsers()) {
+            if (u.getUuid().equals(mConnectedUser.getUuid())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Vérifie si un nouveau message doit déclencher une notification.
+     * Gère : DM, @mention, message canal.
+     */
+    private void checkNotification(Message msg) {
+        if (mConnectedUser == null) return;
+        UUID myUuid = mConnectedUser.getUuid();
+        if (msg.getSender().getUuid().equals(myUuid)) return;
+
+        if (mRecipient != null && isInConversation(msg, mRecipient.getUuid())) return;
+
+        UUID recipientUuid = msg.getRecipient();
+        boolean isDm = recipientUuid.equals(myUuid);
+        boolean isMention = msg.getText().contains("@" + mConnectedUser.getUserTag());
+        String senderName = msg.getSender().getName();
+
+        if (isDm) {
+            String title = isMention ? "Message prive (mention)" : "Message prive";
+            String text = senderName + ": " + msg.getText();
+            for (IMessageObserver o : mObservers) {
+                o.notifyNewNotification(title, text, msg.getSender().getUuid(), null);
+                o.notifyUnreadMessage(msg.getSender().getUuid());
+            }
+        } else {
+            Channel targetChannel = findChannelByUuid(recipientUuid);
+            if (targetChannel != null && isUserInChannel(targetChannel)) {
+                String title;
+                if (isMention) {
+                    title = "Mention dans #" + targetChannel.getName();
+                } else {
+                    title = "#" + targetChannel.getName();
+                }
+                String text = senderName + ": " + msg.getText();
+                for (IMessageObserver o : mObservers) {
+                    o.notifyNewNotification(title, text, msg.getSender().getUuid(), targetChannel.getUuid());
+                    o.notifyUnreadChannel(targetChannel.getUuid());
+                }
+            }
+        }
     }
 
     @Override public void notifyUserAdded(User addedUser) {}

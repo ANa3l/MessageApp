@@ -9,7 +9,10 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -38,6 +41,7 @@ public class ChannelView extends JPanel {
     private DefaultListModel<Channel> mListModel;
     private JTextField mSearchField;
     private JButton mCreateButton;
+    private final Map<UUID, Integer> mUnreadCounts = new HashMap<>();
 
     public ChannelView() {
         initComponents();
@@ -124,15 +128,32 @@ public class ChannelView extends JPanel {
         mCreateButton.addActionListener(l);
     }
 
+    /**
+     * Incremente le compteur de messages non lus pour un canal.
+     */
+    public void addUnread(UUID channelUuid) {
+        mUnreadCounts.put(channelUuid, mUnreadCounts.getOrDefault(channelUuid, 0) + 1);
+        mChannelList.repaint();
+    }
+
+    /**
+     * Supprime le compteur de messages non lus pour un canal.
+     */
+    public void clearUnread(UUID channelUuid) {
+        mUnreadCounts.remove(channelUuid);
+        mChannelList.repaint();
+    }
+
     // ===================================================================
     // Renderer des cellules
     // ===================================================================
 
-    private static class ChannelCellRenderer extends JPanel implements ListCellRenderer<Channel> {
+    private class ChannelCellRenderer extends JPanel implements ListCellRenderer<Channel> {
 
         private ChannelIconPanel mIcon;
         private JLabel mNameLabel;
         private JLabel mSubLabel;
+        private JLabel mBadgeLabel;
 
         public ChannelCellRenderer() {
             setLayout(new BorderLayout(10, 0));
@@ -158,6 +179,28 @@ public class ChannelView extends JPanel {
 
             infoPanel.add(Box.createVerticalGlue());
             add(infoPanel, BorderLayout.CENTER);
+
+            // Badge compteur (non lus)
+            mBadgeLabel = new JLabel() {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    if (getText() != null && !getText().isEmpty()) {
+                        Graphics2D g2 = (Graphics2D) g.create();
+                        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                        g2.setColor(Theme.ACCENT);
+                        g2.fillRoundRect(0, (getHeight() - 20) / 2, getWidth(), 20, 20, 20);
+                        g2.dispose();
+                    }
+                    super.paintComponent(g);
+                }
+            };
+            mBadgeLabel.setFont(new Font("SansSerif", Font.BOLD, 11));
+            mBadgeLabel.setForeground(Color.WHITE);
+            mBadgeLabel.setHorizontalAlignment(JLabel.CENTER);
+            mBadgeLabel.setOpaque(false);
+            mBadgeLabel.setPreferredSize(new Dimension(28, 20));
+            mBadgeLabel.setVisible(false);
+            add(mBadgeLabel, BorderLayout.EAST);
         }
 
         @Override
@@ -167,12 +210,29 @@ public class ChannelView extends JPanel {
             mIcon.setPrivate(channel.isPrivate());
             mIcon.setIconColor(getChannelColor(channel.getName()));
 
+            boolean hasUnread = mUnreadCounts.containsKey(channel.getUuid());
+            int unreadCount = mUnreadCounts.getOrDefault(channel.getUuid(), 0);
+
             mNameLabel.setText(channel.getName());
+            mNameLabel.setFont(hasUnread
+                    ? new Font("SansSerif", Font.BOLD, 13)
+                    : Theme.FONT_BODY);
+
             String creatorInfo = "@" + channel.getCreator().getUserTag();
             if (channel.isPrivate()) {
                 creatorInfo += "  \uD83D\uDD12";
             }
             mSubLabel.setText(creatorInfo);
+
+            if (hasUnread) {
+                mBadgeLabel.setText(unreadCount > 99 ? "99+" : String.valueOf(unreadCount));
+                mBadgeLabel.setPreferredSize(new Dimension(
+                        unreadCount > 99 ? 36 : 28, 20));
+                mBadgeLabel.setVisible(true);
+            } else {
+                mBadgeLabel.setText("");
+                mBadgeLabel.setVisible(false);
+            }
 
             if (isSelected) {
                 setBackground(Theme.SELECTION);

@@ -8,7 +8,10 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -34,6 +37,7 @@ public class UserView extends JPanel {
     private JList<User> mUserList;
     private DefaultListModel<User> mListModel;
     private JTextField mSearchField;
+    private final Map<UUID, Integer> mUnreadCounts = new HashMap<>();
 
     /**
      * Constructeur.
@@ -121,16 +125,33 @@ public class UserView extends JPanel {
         return mUserList;
     }
 
+    /**
+     * Incrémente le compteur de messages non lus pour un utilisateur.
+     */
+    public void addUnread(UUID userUuid) {
+        mUnreadCounts.put(userUuid, mUnreadCounts.getOrDefault(userUuid, 0) + 1);
+        mUserList.repaint();
+    }
+
+    /**
+     * Supprime le compteur de messages non lus pour un utilisateur.
+     */
+    public void clearUnread(UUID userUuid) {
+        mUnreadCounts.remove(userUuid);
+        mUserList.repaint();
+    }
+
     // === Classes internes (rendu graphique) ===
 
     /**
      * Renderer pour les cellules utilisateur.
      */
-    private static class UserCellRenderer extends JPanel implements ListCellRenderer<User> {
+    private class UserCellRenderer extends JPanel implements ListCellRenderer<User> {
 
         private AvatarLabel mAvatar;
         private JLabel mNameLabel;
         private JLabel mTagLabel;
+        private JLabel mBadgeLabel;
 
         public UserCellRenderer() {
             setLayout(new BorderLayout(10, 0));
@@ -156,6 +177,28 @@ public class UserView extends JPanel {
 
             infoPanel.add(Box.createVerticalGlue());
             add(infoPanel, BorderLayout.CENTER);
+
+            // Badge compteur (non lus)
+            mBadgeLabel = new JLabel() {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    if (getText() != null && !getText().isEmpty()) {
+                        Graphics2D g2 = (Graphics2D) g.create();
+                        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                        g2.setColor(Theme.ACCENT);
+                        g2.fillRoundRect(0, (getHeight() - 20) / 2, getWidth(), 20, 20, 20);
+                        g2.dispose();
+                    }
+                    super.paintComponent(g);
+                }
+            };
+            mBadgeLabel.setFont(new Font("SansSerif", Font.BOLD, 11));
+            mBadgeLabel.setForeground(Color.WHITE);
+            mBadgeLabel.setHorizontalAlignment(JLabel.CENTER);
+            mBadgeLabel.setOpaque(false);
+            mBadgeLabel.setPreferredSize(new Dimension(28, 20));
+            mBadgeLabel.setVisible(false);
+            add(mBadgeLabel, BorderLayout.EAST);
         }
 
         @Override
@@ -166,8 +209,23 @@ public class UserView extends JPanel {
             mAvatar.setInitial(initial);
             mAvatar.setCircleColor(getAvatarColor(user.getUserTag()));
 
+            boolean hasUnread = mUnreadCounts.containsKey(user.getUuid());
+            int unreadCount = mUnreadCounts.getOrDefault(user.getUuid(), 0);
             mNameLabel.setText(user.getName());
+            mNameLabel.setFont(hasUnread
+                    ? new Font("SansSerif", Font.BOLD, 13)
+                    : Theme.FONT_BODY);
             mTagLabel.setText("@" + user.getUserTag());
+
+            if (hasUnread) {
+                mBadgeLabel.setText(unreadCount > 99 ? "99+" : String.valueOf(unreadCount));
+                mBadgeLabel.setPreferredSize(new Dimension(
+                        unreadCount > 99 ? 36 : 28, 20));
+                mBadgeLabel.setVisible(true);
+            } else {
+                mBadgeLabel.setText("");
+                mBadgeLabel.setVisible(false);
+            }
 
             if (isSelected) {
                 setBackground(Theme.SELECTION);

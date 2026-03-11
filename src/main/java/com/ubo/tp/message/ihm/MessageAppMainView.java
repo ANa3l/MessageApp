@@ -24,6 +24,7 @@ import main.java.com.ubo.tp.message.ihm.channel.creator.IChannelCreatorObserver;
 import main.java.com.ubo.tp.message.datamodel.Channel;
 import main.java.com.ubo.tp.message.ihm.message.MessageComponent;
 import main.java.com.ubo.tp.message.datamodel.IMessageRecipient;
+import main.java.com.ubo.tp.message.ihm.message.IMessageObserver;
 import main.java.com.ubo.tp.message.ihm.register.IRegisterObserver;
 import main.java.com.ubo.tp.message.ihm.register.RegisterComponent;
 import main.java.com.ubo.tp.message.ihm.user.IUserObserver;
@@ -193,10 +194,28 @@ public class MessageAppMainView extends JPanel {
 
         // Composant Messages
         mMessageComponent = new MessageComponent(mDataManager, mDatabase);
-        mMessageComponent.addObserver(new main.java.com.ubo.tp.message.ihm.message.IMessageObserver() {
+        mMessageComponent.addObserver(new IMessageObserver() {
             @Override
             public void notifyConversationClosed() {
                 mHomeView.resetCenterContent();
+            }
+
+            @Override
+            public void notifyNewNotification(String title, String text,
+                    java.util.UUID senderUuid, java.util.UUID channelUuid) {
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    mHomeView.addNotification(title, text, senderUuid, channelUuid);
+                });
+            }
+
+            @Override
+            public void notifyUnreadMessage(java.util.UUID senderUuid) {
+                javax.swing.SwingUtilities.invokeLater(() -> mUserComponent.addUnread(senderUuid));
+            }
+
+            @Override
+            public void notifyUnreadChannel(java.util.UUID channelUuid) {
+                javax.swing.SwingUtilities.invokeLater(() -> mChannelComponent.addUnread(channelUuid));
             }
         });
         mMessageComponent.addSettingsListener(e -> {
@@ -208,6 +227,29 @@ public class MessageAppMainView extends JPanel {
 
         // Vue Home
         mHomeView = new HomeView(mProfileComponent, mUserComponent, mChannelComponent);
+
+        // Navigation depuis les notifications
+        mHomeView.addNotificationClickListener(e -> {
+            int index = Integer.parseInt(e.getActionCommand());
+            HomeView.NotificationEntry entry = mHomeView.getNotification(index);
+            if (entry != null) {
+                if (entry.channelUuid != null) {
+                    for (Channel ch : mDataManager.getChannels()) {
+                        if (ch.getUuid().equals(entry.channelUuid)) {
+                            showConversation(ch);
+                            break;
+                        }
+                    }
+                } else if (entry.senderUuid != null) {
+                    for (User u : mDataManager.getUsers()) {
+                        if (u.getUuid().equals(entry.senderUuid)) {
+                            showConversation(u);
+                            break;
+                        }
+                    }
+                }
+            }
+        });
 
         // Affichage initial
         showLoginView();
@@ -259,6 +301,7 @@ public class MessageAppMainView extends JPanel {
         mUserComponent.setConnectedUser(connectedUser);
         mChannelComponent.setConnectedUser(connectedUser);
         mChannelCreatorComponent.setConnectedUser(connectedUser);
+        mMessageComponent.setConnectedUser(connectedUser);
         mHomeView.resetCenterContent();
         removeAll();
         add(mHomeView, BorderLayout.CENTER);
@@ -284,6 +327,12 @@ public class MessageAppMainView extends JPanel {
      * Ouvre la conversation avec un destinataire (User ou Channel).
      */
     private void showConversation(IMessageRecipient recipient) {
+        if (recipient instanceof User) {
+            mUserComponent.clearUnread(recipient.getUuid());
+        }
+        if (recipient instanceof Channel) {
+            mChannelComponent.clearUnread(recipient.getUuid());
+        }
         mMessageComponent.setRecipient(recipient, mSession.getConnectedUser());
         mHomeView.setCenterContent(mMessageComponent.getView());
     }
