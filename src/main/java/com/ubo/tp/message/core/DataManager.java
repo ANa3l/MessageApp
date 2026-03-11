@@ -126,6 +126,13 @@ public class DataManager {
 	}
 
 	/**
+	 * Supprime un message (supprime le fichier du repertoire d'echange).
+	 */
+	public void deleteMessage(Message message) {
+		this.mEntityManager.deleteMessageFile(message);
+	}
+
+	/**
 	 * Retourne tous les Messages d'un utilisateur.
 	 *
 	 * @param user utilisateur dont les messages sont à rechercher.

@@ -22,8 +22,12 @@ import main.java.com.ubo.tp.message.ihm.channel.IChannelDetailObserver;
 import main.java.com.ubo.tp.message.ihm.channel.creator.ChannelCreatorComponent;
 import main.java.com.ubo.tp.message.ihm.channel.creator.IChannelCreatorObserver;
 import main.java.com.ubo.tp.message.datamodel.Channel;
+import main.java.com.ubo.tp.message.ihm.message.MessageComponent;
+import main.java.com.ubo.tp.message.datamodel.IMessageRecipient;
+import main.java.com.ubo.tp.message.ihm.message.IMessageObserver;
 import main.java.com.ubo.tp.message.ihm.register.IRegisterObserver;
 import main.java.com.ubo.tp.message.ihm.register.RegisterComponent;
+import main.java.com.ubo.tp.message.ihm.user.IUserObserver;
 import main.java.com.ubo.tp.message.ihm.user.UserComponent;
 
 /**
@@ -42,6 +46,7 @@ public class MessageAppMainView extends JPanel {
     private ChannelComponent mChannelComponent;
     private ChannelCreatorComponent mChannelCreatorComponent;
     private ChannelDetailComponent mChannelDetailComponent;
+    private MessageComponent mMessageComponent;
     private HomeView mHomeView;
 
     /**
@@ -130,13 +135,19 @@ public class MessageAppMainView extends JPanel {
 
         // Composant User
         mUserComponent = new UserComponent(mDataManager, mDatabase);
+        mUserComponent.addObserver(new IUserObserver() {
+            @Override
+            public void notifyUserSelected(User selectedUser) {
+                showConversation(selectedUser);
+            }
+        });
 
         // Composant Channel
         mChannelComponent = new ChannelComponent(mDataManager, mDatabase);
         mChannelComponent.addObserver(new IChannelObserver() {
             @Override
             public void notifyChannelSelected(Channel selectedChannel) {
-                showChannelDetail(selectedChannel);
+                showConversation(selectedChannel);
             }
 
             @Override
@@ -172,9 +183,73 @@ public class MessageAppMainView extends JPanel {
                 mHomeView.resetCenterContent();
             }
         });
+        mChannelDetailComponent.addCloseListener(e -> {
+            IMessageRecipient r = mMessageComponent.getRecipient();
+            if (r != null) {
+                showConversation(r);
+            } else {
+                mHomeView.resetCenterContent();
+            }
+        });
+
+        // Composant Messages
+        mMessageComponent = new MessageComponent(mDataManager, mDatabase);
+        mMessageComponent.addObserver(new IMessageObserver() {
+            @Override
+            public void notifyConversationClosed() {
+                mHomeView.resetCenterContent();
+            }
+
+            @Override
+            public void notifyNewNotification(String title, String text,
+                    java.util.UUID senderUuid, java.util.UUID channelUuid) {
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    mHomeView.addNotification(title, text, senderUuid, channelUuid);
+                });
+            }
+
+            @Override
+            public void notifyUnreadMessage(java.util.UUID senderUuid) {
+                javax.swing.SwingUtilities.invokeLater(() -> mUserComponent.addUnread(senderUuid));
+            }
+
+            @Override
+            public void notifyUnreadChannel(java.util.UUID channelUuid) {
+                javax.swing.SwingUtilities.invokeLater(() -> mChannelComponent.addUnread(channelUuid));
+            }
+        });
+        mMessageComponent.addSettingsListener(e -> {
+            IMessageRecipient r = mMessageComponent.getRecipient();
+            if (r instanceof Channel) {
+                showChannelDetail((Channel) r);
+            }
+        });
 
         // Vue Home
         mHomeView = new HomeView(mProfileComponent, mUserComponent, mChannelComponent);
+
+        // Navigation depuis les notifications
+        mHomeView.addNotificationClickListener(e -> {
+            int index = Integer.parseInt(e.getActionCommand());
+            HomeView.NotificationEntry entry = mHomeView.getNotification(index);
+            if (entry != null) {
+                if (entry.channelUuid != null) {
+                    for (Channel ch : mDataManager.getChannels()) {
+                        if (ch.getUuid().equals(entry.channelUuid)) {
+                            showConversation(ch);
+                            break;
+                        }
+                    }
+                } else if (entry.senderUuid != null) {
+                    for (User u : mDataManager.getUsers()) {
+                        if (u.getUuid().equals(entry.senderUuid)) {
+                            showConversation(u);
+                            break;
+                        }
+                    }
+                }
+            }
+        });
 
         // Affichage initial
         showLoginView();
@@ -226,6 +301,7 @@ public class MessageAppMainView extends JPanel {
         mUserComponent.setConnectedUser(connectedUser);
         mChannelComponent.setConnectedUser(connectedUser);
         mChannelCreatorComponent.setConnectedUser(connectedUser);
+        mMessageComponent.setConnectedUser(connectedUser);
         mHomeView.resetCenterContent();
         removeAll();
         add(mHomeView, BorderLayout.CENTER);
@@ -245,6 +321,20 @@ public class MessageAppMainView extends JPanel {
      */
     private void showChannelCreator() {
         mHomeView.setCenterContent(mChannelCreatorComponent.getView());
+    }
+
+    /**
+     * Ouvre la conversation avec un destinataire (User ou Channel).
+     */
+    private void showConversation(IMessageRecipient recipient) {
+        if (recipient instanceof User) {
+            mUserComponent.clearUnread(recipient.getUuid());
+        }
+        if (recipient instanceof Channel) {
+            mChannelComponent.clearUnread(recipient.getUuid());
+        }
+        mMessageComponent.setRecipient(recipient, mSession.getConnectedUser());
+        mHomeView.setCenterContent(mMessageComponent.getView());
     }
 
     /**

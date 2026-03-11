@@ -495,4 +495,20 @@ public class EntityManager implements IWatchableDirectoryObserver {
 			throw new RuntimeException("Le répertoire d'échange n'est pas configuré !");
 		}
 	}
+
+	/**
+	 * Suppression du fichier correspondant a un message.
+	 */
+	public void deleteMessageFile(Message message) {
+		if (mDirectoryPath != null) {
+			String filePath = mDirectoryPath + Constants.SYSTEM_FILE_SEPARATOR
+					+ message.getUuid() + "." + Constants.MESSAGE_FILE_EXTENSION;
+			File messageFile = new File(filePath);
+			if (messageFile.exists()) {
+				messageFile.delete();
+			}
+		} else {
+			throw new RuntimeException("Le répertoire d'échange n'est pas configuré !");
+		}
+	}
 }
