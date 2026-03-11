@@ -304,5 +304,29 @@ public class MessageController implements IDatabaseObserver {
 
     @Override
     public void notifyChannelModified(Channel modifiedChannel) {
+        if (!(mRecipient instanceof Channel))
+            return;
+        if (!mRecipient.getUuid().equals(modifiedChannel.getUuid()))
+            return;
+
+        // Vérifier si l'utilisateur connecté est encore membre
+        boolean isCreator = modifiedChannel.getCreator().getUuid().equals(mConnectedUser.getUuid());
+        boolean isMember = modifiedChannel.getUsers().stream()
+                .anyMatch(u -> u.getUuid().equals(mConnectedUser.getUuid()));
+
+        if (!isCreator && !isMember) {
+            mRecipient = null;
+            for (IMessageObserver o : mObservers) {
+                o.notifyConversationClosed();
+            }
+        }
+    }
+
+    @Override
+    public void notifyUserOnline(UUID userUuid) {
+    }
+
+    @Override
+    public void notifyUserOffline(UUID userUuid) {
     }
 }

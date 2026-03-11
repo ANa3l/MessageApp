@@ -1,6 +1,7 @@
 package main.java.com.ubo.tp.message.core.database;
 
 import java.util.Set;
+import java.util.UUID;
 
 import main.java.com.ubo.tp.message.datamodel.Channel;
 import main.java.com.ubo.tp.message.datamodel.Message;
@@ -41,4 +42,19 @@ public interface IDatabase {
 	 * Retourne la liste des cannaux.
 	 */
 	Set<Channel> getChannels();
+
+	/**
+	 * Retourne les UUID des utilisateurs en ligne.
+	 */
+	Set<UUID> getOnlineUsers();
+
+	/**
+	 * Marque un utilisateur comme en ligne.
+	 */
+	void setUserOnline(UUID userUuid);
+
+	/**
+	 * Marque un utilisateur comme hors ligne.
+	 */
+	void setUserOffline(UUID userUuid);
 }

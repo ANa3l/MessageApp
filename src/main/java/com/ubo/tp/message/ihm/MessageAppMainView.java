@@ -38,6 +38,7 @@ public class MessageAppMainView extends JPanel {
     private DataManager mDataManager;
     private IDatabase mDatabase;
     private Session mSession;
+    private User mCurrentUser;
     private LoginComponent mLoginComponent;
     private RegisterComponent mRegisterComponent;
     private ProfileComponent mProfileComponent;
@@ -171,7 +172,7 @@ public class MessageAppMainView extends JPanel {
         });
 
         // Composant ChannelDetail
-        mChannelDetailComponent = new ChannelDetailComponent(mDataManager);
+        mChannelDetailComponent = new ChannelDetailComponent(mDataManager, mDatabase);
         mChannelDetailComponent.addObserver(new IChannelDetailObserver() {
             @Override
             public void notifyChannelDeleted() {
@@ -267,6 +268,10 @@ public class MessageAppMainView extends JPanel {
 
             @Override
             public void notifyLogout() {
+                if (mCurrentUser != null) {
+                    mDataManager.deletePresence(mCurrentUser);
+                    mCurrentUser = null;
+                }
                 showLoginView();
             }
         });
@@ -296,6 +301,8 @@ public class MessageAppMainView extends JPanel {
      * Affiche la vue d'accueil après connexion.
      */
     public void showHomeView(User connectedUser) {
+        mCurrentUser = connectedUser;
+        mDataManager.sendPresence(connectedUser);
         mProfileComponent.setConnectedUser(connectedUser);
         mProfileEditorComponent.setConnectedUser(connectedUser);
         mUserComponent.setConnectedUser(connectedUser);
@@ -314,6 +321,16 @@ public class MessageAppMainView extends JPanel {
      */
     private void showProfileEditor() {
         mHomeView.setCenterContent(mProfileEditorComponent.getView());
+    }
+
+    /**
+     * Nettoyage de présence (utilisé par le ShutdownHook).
+     */
+    public void cleanupPresence() {
+        if (mCurrentUser != null) {
+            mDataManager.deletePresence(mCurrentUser);
+            mCurrentUser = null;
+        }
     }
 
     /**

@@ -1,5 +1,7 @@
 package main.java.com.ubo.tp.message.ihm;
 
+import java.util.UUID;
+
 import main.java.com.ubo.tp.message.core.database.IDatabaseObserver;
 import main.java.com.ubo.tp.message.core.session.ISessionObserver;
 import main.java.com.ubo.tp.message.datamodel.Channel;
@@ -68,5 +70,15 @@ public class ConsoleLogger implements IDatabaseObserver, ISessionObserver {
     @Override
     public void notifyChannelModified(Channel modifiedChannel) {
         System.out.println("[DB] Canal modifié : " + modifiedChannel.getName());
+    }
+
+    @Override
+    public void notifyUserOnline(UUID userUuid) {
+        System.out.println("[DB] Utilisateur en ligne : " + userUuid);
+    }
+
+    @Override
+    public void notifyUserOffline(UUID userUuid) {
+        System.out.println("[DB] Utilisateur hors ligne : " + userUuid);
     }
 }
