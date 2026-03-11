@@ -1,4 +1,14 @@
-/bin/
+.idea/
+*.iml
+out/
+bin/
+.DS_Store
+*.class
+*.log
+*.ipr
+*.iws
+/.gradle/
+/.vscode//bin/
 /target/
 
 # Fichier de configuration (timestamp change à chaque ouverture)
