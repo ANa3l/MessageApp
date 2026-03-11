@@ -40,7 +40,7 @@ public class MessageApp extends JFrame {
     /**
      * Vue principale de l'application.
      */
-    protected MessageAppMainView mMainView;
+    protected MessageAppMainontroller mMainView;
 
     /**
      * Session de l'application.
@@ -126,7 +126,7 @@ public class MessageApp extends JFrame {
         setJMenuBar(new MessageAppMenuBar(this));
 
         // Création de la vue principale
-        mMainView = new MessageAppMainView(mDataManager, mDatabase, mSession);
+        mMainView = new MessageAppMainontroller(mDataManager, mDatabase, mSession);
         setContentPane(this.mMainView);
 
         // ShutdownHook : nettoyage de la présence en cas de fermeture brutale

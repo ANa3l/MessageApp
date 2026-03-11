@@ -33,7 +33,7 @@ import main.java.com.ubo.tp.message.ihm.user.UserComponent;
 /**
  * Vue principale de l'application.
  */
-public class MessageAppMainView extends JPanel {
+public class MessageAppMainontroller extends JPanel {
 
     private DataManager mDataManager;
     private IDatabase mDatabase;
@@ -53,7 +53,7 @@ public class MessageAppMainView extends JPanel {
     /**
      * Constructeur.
      */
-    public MessageAppMainView(DataManager dataManager, IDatabase database, Session session) {
+    public MessageAppMainontroller(DataManager dataManager, IDatabase database, Session session) {
         this.mDataManager = dataManager;
         this.mDatabase = database;
         this.mSession = session;
