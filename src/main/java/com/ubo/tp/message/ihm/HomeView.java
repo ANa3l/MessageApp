@@ -73,7 +73,8 @@ public class HomeView extends JPanel {
     /**
      * Initialisation des composants.
      */
-    private void initComponents(ProfileComponent profileComponent, UserComponent userComponent, ChannelComponent channelComponent) {
+    private void initComponents(ProfileComponent profileComponent, UserComponent userComponent,
+            ChannelComponent channelComponent) {
         setLayout(new BorderLayout());
 
         // === Header ===
@@ -315,16 +316,24 @@ public class HomeView extends JPanel {
                     public void mouseEntered(java.awt.event.MouseEvent e) {
                         item.setBackground(Theme.SELECTION);
                     }
+
                     @Override
                     public void mouseExited(java.awt.event.MouseEvent e) {
                         item.setBackground(Color.WHITE);
                     }
+
                     @Override
                     public void mouseClicked(java.awt.event.MouseEvent e) {
                         popup.setVisible(false);
+                        // 1. Navigation (lit getNotification(index) avant suppression)
                         for (ActionListener l : mNotificationClickListeners) {
                             l.actionPerformed(new java.awt.event.ActionEvent(
                                     HomeView.this, 0, String.valueOf(index)));
+                        }
+                        // 2. Supprimer la notification lue et mettre à jour le badge
+                        if (index < mNotifications.size()) {
+                            mNotifications.remove(index);
+                            updateBellBadge();
                         }
                     }
                 });
