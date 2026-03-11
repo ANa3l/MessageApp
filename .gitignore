@@ -1,15 +1,23 @@
+# IntelliJ IDEA
 .idea/
 *.iml
-out/
-bin/
-.DS_Store
-*.class
-*.log
 *.ipr
 *.iws
-/.gradle/
-/.vscode//bin/
-/target/
+
+# Build outputs
+out/
+bin/
+target/
+
+# Gradle
+.gradle/
+
+# VS Code
+.vscode/
+
+# Java
+*.class
+*.log
 
 # Fichier de configuration (timestamp change à chaque ouverture)
 **/configuration.properties
