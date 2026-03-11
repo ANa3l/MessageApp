@@ -3,6 +3,7 @@ package main.java.com.ubo.tp.message.ihm.channel;
 import javax.swing.JPanel;
 
 import main.java.com.ubo.tp.message.core.DataManager;
+import main.java.com.ubo.tp.message.core.database.IDatabase;
 import main.java.com.ubo.tp.message.datamodel.Channel;
 import main.java.com.ubo.tp.message.datamodel.User;
 
@@ -16,9 +17,10 @@ public class ChannelDetailComponent {
     private final ChannelDetailView mView;
     private final ChannelDetailController mController;
 
-    public ChannelDetailComponent(DataManager dataManager) {
+    public ChannelDetailComponent(DataManager dataManager, IDatabase database) {
         this.mView = new ChannelDetailView();
         this.mController = new ChannelDetailController(mView, dataManager);
+        database.addObserver(mController);
 
         mView.addDeleteListener(e -> mController.handleDelete());
         mView.addLeaveListener(e -> mController.handleLeave());

@@ -3,6 +3,7 @@ package main.java.com.ubo.tp.message.ihm.channel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import main.java.com.ubo.tp.message.core.DataManager;
 import main.java.com.ubo.tp.message.core.database.IDatabaseObserver;
@@ -153,5 +154,13 @@ public class ChannelController implements IDatabaseObserver {
 
     @Override
     public void notifyMessageModified(Message modifiedMessage) {
+    }
+
+    @Override
+    public void notifyUserOnline(UUID userUuid) {
+    }
+
+    @Override
+    public void notifyUserOffline(UUID userUuid) {
     }
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import main.java.com.ubo.tp.message.common.Constants;
 import main.java.com.ubo.tp.message.core.DataManager;
@@ -78,6 +79,7 @@ public class UserController implements IDatabaseObserver {
         }
 
         mView.updateUserList(filtered);
+        mView.setOnlineUsers(mDataManager.getOnlineUsers());
     }
 
     /**
@@ -131,5 +133,15 @@ public class UserController implements IDatabaseObserver {
 
     @Override
     public void notifyChannelModified(Channel modifiedChannel) {
+    }
+
+    @Override
+    public void notifyUserOnline(UUID userUuid) {
+        mView.setOnlineUsers(mDataManager.getOnlineUsers());
+    }
+
+    @Override
+    public void notifyUserOffline(UUID userUuid) {
+        mView.setOnlineUsers(mDataManager.getOnlineUsers());
     }
 }

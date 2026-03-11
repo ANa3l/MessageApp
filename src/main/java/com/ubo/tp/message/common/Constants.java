@@ -26,6 +26,11 @@ public class Constants {
 	public static final String CHANNEL_FILE_EXTENSION = "chn";
 
 	/**
+	 * Extension des fichiers de présence (utilisateur en ligne)
+	 */
+	public static final String PRESENCE_FILE_EXTENSION = "prs";
+
+	/**
 	 * Répertoire des fichiers temporaires du système.
 	 */
 	public static final String SYSTEM_TMP_DIR = System.getProperty("java.io.tmpdir");

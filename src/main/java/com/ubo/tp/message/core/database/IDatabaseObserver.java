@@ -1,5 +1,7 @@
 package main.java.com.ubo.tp.message.core.database;
 
+import java.util.UUID;
+
 import main.java.com.ubo.tp.message.datamodel.Channel;
 import main.java.com.ubo.tp.message.datamodel.Message;
 import main.java.com.ubo.tp.message.datamodel.User;
@@ -72,5 +74,15 @@ public interface IDatabaseObserver {
 	 * @param modifiedChannel
 	 */
 	void notifyChannelModified(Channel modifiedChannel);
+
+	/**
+	 * Notification lorsqu'un utilisateur passe en ligne.
+	 */
+	void notifyUserOnline(UUID userUuid);
+
+	/**
+	 * Notification lorsqu'un utilisateur passe hors ligne.
+	 */
+	void notifyUserOffline(UUID userUuid);
 
 }

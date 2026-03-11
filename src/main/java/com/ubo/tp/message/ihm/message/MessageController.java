@@ -34,7 +34,8 @@ public class MessageController implements IDatabaseObserver {
     }
 
     /**
-     * Définit l'utilisateur connecté (appelé dès la connexion pour les notifications).
+     * Définit l'utilisateur connecté (appelé dès la connexion pour les
+     * notifications).
      */
     public void setConnectedUser(User connectedUser) {
         this.mConnectedUser = connectedUser;
@@ -100,9 +101,11 @@ public class MessageController implements IDatabaseObserver {
      * Envoie le message saisi dans le champ de saisie.
      */
     public void handleSend() {
-        if (mRecipient == null || mConnectedUser == null) return;
+        if (mRecipient == null || mConnectedUser == null)
+            return;
         String text = mView.getMessageText();
-        if (text.isEmpty() || text.length() > 200) return;
+        if (text.isEmpty() || text.length() > 200)
+            return;
         mDataManager.sendMessage(new Message(mConnectedUser, mRecipient.getUuid(), text));
         mView.clearInput();
         refreshMessages();
@@ -112,14 +115,16 @@ public class MessageController implements IDatabaseObserver {
      * Supprime un message (uniquement si l'utilisateur en est l'auteur).
      */
     public void handleDeleteMessage(Message message) {
-        if (mConnectedUser == null) return;
+        if (mConnectedUser == null)
+            return;
         if (message.getSender().getUuid().equals(mConnectedUser.getUuid())) {
             mDataManager.deleteMessage(message);
         }
     }
 
     /**
-     * Retourne la liste des utilisateurs mentionnables dans la conversation courante.
+     * Retourne la liste des utilisateurs mentionnables dans la conversation
+     * courante.
      */
     public List<User> getMentionableUsers() {
         List<User> users = new ArrayList<>();
@@ -145,7 +150,8 @@ public class MessageController implements IDatabaseObserver {
     }
 
     private void refreshMessages() {
-        if (mRecipient == null || mConnectedUser == null) return;
+        if (mRecipient == null || mConnectedUser == null)
+            return;
         UUID recipientUuid = mRecipient.getUuid();
         List<Message> conversation = new ArrayList<>();
         for (Message msg : mDataManager.getMessages()) {
@@ -229,11 +235,14 @@ public class MessageController implements IDatabaseObserver {
      * Gère : DM, @mention, message canal.
      */
     private void checkNotification(Message msg) {
-        if (mConnectedUser == null) return;
+        if (mConnectedUser == null)
+            return;
         UUID myUuid = mConnectedUser.getUuid();
-        if (msg.getSender().getUuid().equals(myUuid)) return;
+        if (msg.getSender().getUuid().equals(myUuid))
+            return;
 
-        if (mRecipient != null && isInConversation(msg, mRecipient.getUuid())) return;
+        if (mRecipient != null && isInConversation(msg, mRecipient.getUuid()))
+            return;
 
         UUID recipientUuid = msg.getRecipient();
         boolean isDm = recipientUuid.equals(myUuid);
@@ -250,26 +259,40 @@ public class MessageController implements IDatabaseObserver {
         } else {
             Channel targetChannel = findChannelByUuid(recipientUuid);
             if (targetChannel != null && isUserInChannel(targetChannel)) {
-                String title;
-                if (isMention) {
-                    title = "Mention dans #" + targetChannel.getName();
-                } else {
-                    title = "#" + targetChannel.getName();
-                }
-                String text = senderName + ": " + msg.getText();
+                // Badge non-lu pour tout message dans un canal (CHN-009)
                 for (IMessageObserver o : mObservers) {
-                    o.notifyNewNotification(title, text, msg.getSender().getUuid(), targetChannel.getUuid());
                     o.notifyUnreadChannel(targetChannel.getUuid());
+                }
+                // Notification popup uniquement si mention (MSG-010)
+                if (isMention) {
+                    String title = "Mention dans #" + targetChannel.getName();
+                    String text = senderName + ": " + msg.getText();
+                    for (IMessageObserver o : mObservers) {
+                        o.notifyNewNotification(title, text, msg.getSender().getUuid(), targetChannel.getUuid());
+                    }
                 }
             }
         }
     }
 
-    @Override public void notifyUserAdded(User addedUser) {}
-    @Override public void notifyUserDeleted(User deletedUser) {}
-    @Override public void notifyUserModified(User modifiedUser) {}
-    @Override public void notifyChannelAdded(Channel addedChannel) {}
-    @Override public void notifyChannelDeleted(Channel deletedChannel) {
+    @Override
+    public void notifyUserAdded(User addedUser) {
+    }
+
+    @Override
+    public void notifyUserDeleted(User deletedUser) {
+    }
+
+    @Override
+    public void notifyUserModified(User modifiedUser) {
+    }
+
+    @Override
+    public void notifyChannelAdded(Channel addedChannel) {
+    }
+
+    @Override
+    public void notifyChannelDeleted(Channel deletedChannel) {
         if (mRecipient instanceof Channel
                 && mRecipient.getUuid().equals(deletedChannel.getUuid())) {
             mRecipient = null;
@@ -278,5 +301,32 @@ public class MessageController implements IDatabaseObserver {
             }
         }
     }
-    @Override public void notifyChannelModified(Channel modifiedChannel) {}
+
+    @Override
+    public void notifyChannelModified(Channel modifiedChannel) {
+        if (!(mRecipient instanceof Channel))
+            return;
+        if (!mRecipient.getUuid().equals(modifiedChannel.getUuid()))
+            return;
+
+        // Vérifier si l'utilisateur connecté est encore membre
+        boolean isCreator = modifiedChannel.getCreator().getUuid().equals(mConnectedUser.getUuid());
+        boolean isMember = modifiedChannel.getUsers().stream()
+                .anyMatch(u -> u.getUuid().equals(mConnectedUser.getUuid()));
+
+        if (!isCreator && !isMember) {
+            mRecipient = null;
+            for (IMessageObserver o : mObservers) {
+                o.notifyConversationClosed();
+            }
+        }
+    }
+
+    @Override
+    public void notifyUserOnline(UUID userUuid) {
+    }
+
+    @Override
+    public void notifyUserOffline(UUID userUuid) {
+    }
 }

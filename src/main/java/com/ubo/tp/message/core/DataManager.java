@@ -2,6 +2,7 @@ package main.java.com.ubo.tp.message.core;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import main.java.com.ubo.tp.message.core.database.EntityManager;
 import main.java.com.ubo.tp.message.core.database.IDatabase;
@@ -201,5 +202,26 @@ public class DataManager {
 		mWatchableDirectory = new WatchableDirectory(directoryPath);
 		mWatchableDirectory.initWatching();
 		mWatchableDirectory.addObserver(mEntityManager);
+	}
+
+	/**
+	 * Crée le fichier de présence de l'utilisateur connecté.
+	 */
+	public void sendPresence(User user) {
+		mEntityManager.writePresenceFile(user);
+	}
+
+	/**
+	 * Supprime le fichier de présence de l'utilisateur connecté.
+	 */
+	public void deletePresence(User user) {
+		mEntityManager.deletePresenceFile(user);
+	}
+
+	/**
+	 * Retourne les UUID des utilisateurs en ligne.
+	 */
+	public Set<UUID> getOnlineUsers() {
+		return mDatabase.getOnlineUsers();
 	}
 }

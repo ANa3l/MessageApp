@@ -2,6 +2,7 @@ package main.java.com.ubo.tp.message.core.database;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import main.java.com.ubo.tp.message.common.Constants;
 import main.java.com.ubo.tp.message.datamodel.Channel;
@@ -30,6 +31,11 @@ public class Database implements IDatabase {
 	protected final Set<Channel> mChannels;
 
 	/**
+	 * UUID des utilisateurs actuellement en ligne.
+	 */
+	protected final Set<UUID> mOnlineUsers;
+
+	/**
 	 * Liste des observateurs de modifications de la base.
 	 */
 	protected final Set<IDatabaseObserver> mObservers;
@@ -42,6 +48,7 @@ public class Database implements IDatabase {
 		mMessages = new HashSet<>();
 		mObservers = new HashSet<>();
 		mChannels = new HashSet<>();
+		mOnlineUsers = new HashSet<>();
 	}
 
 	@Override
@@ -221,5 +228,26 @@ public class Database implements IDatabase {
 	@Override
 	public void removeObserver(IDatabaseObserver observer) {
 		this.mObservers.remove(observer);
+	}
+
+	@Override
+	public Set<UUID> getOnlineUsers() {
+		return new HashSet<>(mOnlineUsers);
+	}
+
+	@Override
+	public void setUserOnline(UUID userUuid) {
+		mOnlineUsers.add(userUuid);
+		for (IDatabaseObserver observer : mObservers) {
+			observer.notifyUserOnline(userUuid);
+		}
+	}
+
+	@Override
+	public void setUserOffline(UUID userUuid) {
+		mOnlineUsers.remove(userUuid);
+		for (IDatabaseObserver observer : mObservers) {
+			observer.notifyUserOffline(userUuid);
+		}
 	}
 }

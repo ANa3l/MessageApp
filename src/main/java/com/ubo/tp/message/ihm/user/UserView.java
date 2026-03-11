@@ -9,8 +9,10 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.swing.Box;
@@ -38,6 +40,7 @@ public class UserView extends JPanel {
     private DefaultListModel<User> mListModel;
     private JTextField mSearchField;
     private final Map<UUID, Integer> mUnreadCounts = new HashMap<>();
+    private Set<UUID> mOnlineUuids = new HashSet<>();
 
     /**
      * Constructeur.
@@ -141,6 +144,14 @@ public class UserView extends JPanel {
         mUserList.repaint();
     }
 
+    /**
+     * Met à jour les utilisateurs en ligne et force le repaint.
+     */
+    public void setOnlineUsers(Set<UUID> onlineUuids) {
+        mOnlineUuids = onlineUuids;
+        mUserList.repaint();
+    }
+
     // === Classes internes (rendu graphique) ===
 
     /**
@@ -208,6 +219,7 @@ public class UserView extends JPanel {
             String initial = user.getName().isEmpty() ? "?" : user.getName().substring(0, 1).toUpperCase();
             mAvatar.setInitial(initial);
             mAvatar.setCircleColor(getAvatarColor(user.getUserTag()));
+            mAvatar.setOnline(mOnlineUuids.contains(user.getUuid()));
 
             boolean hasUnread = mUnreadCounts.containsKey(user.getUuid());
             int unreadCount = mUnreadCounts.getOrDefault(user.getUuid(), 0);
@@ -260,6 +272,7 @@ public class UserView extends JPanel {
 
         private String mInitial = "";
         private Color mColor = Theme.ACCENT;
+        private boolean mOnline = false;
 
         public AvatarLabel() {
             setPreferredSize(new Dimension(34, 34));
@@ -272,6 +285,10 @@ public class UserView extends JPanel {
 
         public void setCircleColor(Color color) {
             this.mColor = color;
+        }
+
+        public void setOnline(boolean online) {
+            this.mOnline = online;
         }
 
         @Override
@@ -288,6 +305,14 @@ public class UserView extends JPanel {
             int textWidth = g2.getFontMetrics().stringWidth(mInitial);
             int textHeight = g2.getFontMetrics().getAscent();
             g2.drawString(mInitial, (34 - textWidth) / 2, (34 + textHeight) / 2 - 2);
+
+            if (mOnline) {
+                // Pastille verte en bas à droite
+                g2.setColor(new Color(67, 181, 129));
+                g2.fillOval(23, 23, 10, 10);
+                g2.setColor(new Color(54, 57, 63)); // couleur fond (simuler bord)
+                g2.drawOval(23, 23, 10, 10);
+            }
 
             g2.dispose();
         }

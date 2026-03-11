@@ -129,6 +129,13 @@ public class MessageApp extends JFrame {
         mMainView = new MessageAppMainView(mDataManager, mDatabase, mSession);
         setContentPane(this.mMainView);
 
+        // ShutdownHook : nettoyage de la présence en cas de fermeture brutale
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (mMainView != null) {
+                mMainView.cleanupPresence();
+            }
+        }));
+
         // Configuration de la fenêtre
         setSize(800, 600);
         setLocationRelativeTo(null); // Centrer la fenêtre

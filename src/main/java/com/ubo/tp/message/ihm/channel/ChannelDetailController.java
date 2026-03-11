@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import main.java.com.ubo.tp.message.core.DataManager;
+import main.java.com.ubo.tp.message.core.database.IDatabaseObserver;
 import main.java.com.ubo.tp.message.datamodel.Channel;
 import main.java.com.ubo.tp.message.datamodel.User;
 
@@ -12,7 +13,7 @@ import main.java.com.ubo.tp.message.datamodel.User;
  * Gere suppression (CHN-006), depart (CHN-005),
  * ajout membre (CHN-007), retrait membre (CHN-008).
  */
-public class ChannelDetailController {
+public class ChannelDetailController  implements IDatabaseObserver{
 
     private final ChannelDetailView mView;
     private final DataManager mDataManager;
@@ -100,4 +101,27 @@ public class ChannelDetailController {
         }
         return false;
     }
+
+        @Override
+    public void notifyChannelModified(Channel modifiedChannel) {
+        if (mChannel != null && mChannel.getUuid().equals(modifiedChannel.getUuid())) {
+            mChannel = modifiedChannel;
+            boolean isCreator = mChannel.getCreator().getUuid().equals(mConnectedUser.getUuid());
+            mView.setChannel(mChannel, isCreator, mConnectedUser.getUuid());
+            if (isCreator && mChannel.isPrivate()) {
+                refreshAddableMemberList();
+            }
+        }
+    }
+
+    @Override public void notifyChannelAdded(Channel c) {}
+    @Override public void notifyChannelDeleted(Channel c) {}
+    @Override public void notifyUserAdded(main.java.com.ubo.tp.message.datamodel.User u) {}
+    @Override public void notifyUserDeleted(main.java.com.ubo.tp.message.datamodel.User u) {}
+    @Override public void notifyUserModified(main.java.com.ubo.tp.message.datamodel.User u) {}
+    @Override public void notifyMessageAdded(main.java.com.ubo.tp.message.datamodel.Message m) {}
+    @Override public void notifyMessageDeleted(main.java.com.ubo.tp.message.datamodel.Message m) {}
+    @Override public void notifyMessageModified(main.java.com.ubo.tp.message.datamodel.Message m) {}
+    @Override public void notifyUserOnline(java.util.UUID uuid) {}
+    @Override public void notifyUserOffline(java.util.UUID uuid) {}
 }
