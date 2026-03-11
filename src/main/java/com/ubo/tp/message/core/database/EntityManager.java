@@ -146,6 +146,17 @@ public class EntityManager implements IWatchableDirectoryObserver {
 				this.mChannelFileMap.put(channelFile.getName(), newChannel);
 			}
 		}
+
+		//
+		// Traitement des fichiers de présence (.prs)
+		for (File prsFile : getSpecificFiles(newFiles, Constants.PRESENCE_FILE_EXTENSION)) {
+			String name = prsFile.getName();
+			try {
+				UUID uuid = UUID.fromString(name.substring(0, name.lastIndexOf('.')));
+				mDatabase.setUserOnline(uuid);
+			} catch (IllegalArgumentException e) {
+				/* fichier malformé, ignoré */ }
+		}
 	}
 
 	/**
@@ -209,6 +220,17 @@ public class EntityManager implements IWatchableDirectoryObserver {
 				// MAJ de la map
 				mChannelFileMap.remove(deletedChannelFile.getName());
 			}
+		}
+
+		//
+		// Traitement des fichiers de présence supprimés (.prs)
+		for (File prsFile : getSpecificFiles(deletedFiles, Constants.PRESENCE_FILE_EXTENSION)) {
+			String name = prsFile.getName();
+			try {
+				UUID uuid = UUID.fromString(name.substring(0, name.lastIndexOf('.')));
+				mDatabase.setUserOffline(uuid);
+			} catch (IllegalArgumentException e) {
+				/* ignoré */ }
 		}
 	}
 
@@ -452,6 +474,24 @@ public class EntityManager implements IWatchableDirectoryObserver {
 	}
 
 	/**
+	 * Suppression du fichier correspondant a l'utilisateur.
+	 *
+	 * @param user
+	 */
+	public void deleteUserFile(User user) {
+		if (mDirectoryPath != null) {
+			String filePath = mDirectoryPath + Constants.SYSTEM_FILE_SEPARATOR
+					+ user.getUuid() + "." + Constants.USER_FILE_EXTENSION;
+			File userFile = new File(filePath);
+			if (userFile.exists()) {
+				userFile.delete();
+			}
+		} else {
+			throw new RuntimeException("Le répertoire d'échange n'est pas configuré !");
+		}
+	}
+
+	/**
 	 * Génération du fichier correspondant à canal.
 	 *
 	 * @param user
@@ -463,5 +503,60 @@ public class EntityManager implements IWatchableDirectoryObserver {
 		} else {
 			throw new RuntimeException("Le répertoire d'échange n'est pas configuré !");
 		}
+	}
+
+	public void deleteChannelFile(Channel channel) {
+		if (mDirectoryPath != null) {
+			String filePath = mDirectoryPath + Constants.SYSTEM_FILE_SEPARATOR
+					+ channel.getUuid() + "." + Constants.CHANNEL_FILE_EXTENSION;
+			File channelFile = new File(filePath);
+			if (channelFile.exists()) {
+				channelFile.delete();
+			}
+		} else {
+			throw new RuntimeException("Le répertoire d'échange n'est pas configuré !");
+		}
+	}
+
+	/**
+	 * Suppression du fichier correspondant a un message.
+	 */
+	public void deleteMessageFile(Message message) {
+		if (mDirectoryPath != null) {
+			String filePath = mDirectoryPath + Constants.SYSTEM_FILE_SEPARATOR
+					+ message.getUuid() + "." + Constants.MESSAGE_FILE_EXTENSION;
+			File messageFile = new File(filePath);
+			if (messageFile.exists()) {
+				messageFile.delete();
+			}
+		} else {
+			throw new RuntimeException("Le répertoire d'échange n'est pas configuré !");
+		}
+	}
+
+	/**
+	 * Crée le fichier de présence pour un utilisateur.
+	 */
+	public void writePresenceFile(User user) {
+		if (mDirectoryPath == null)
+			throw new RuntimeException("Le répertoire d'échange n'est pas configuré !");
+		File prsFile = new File(mDirectoryPath + Constants.SYSTEM_FILE_SEPARATOR
+				+ user.getUuid() + "." + Constants.PRESENCE_FILE_EXTENSION);
+		try {
+			prsFile.createNewFile();
+		} catch (java.io.IOException e) {
+			throw new RuntimeException("Impossible de créer le fichier de présence !", e);
+		}
+	}
+
+	/**
+	 * Supprime le fichier de présence pour un utilisateur.
+	 */
+	public void deletePresenceFile(User user) {
+		if (mDirectoryPath == null)
+			throw new RuntimeException("Le répertoire d'échange n'est pas configuré !");
+		String filePath = mDirectoryPath + Constants.SYSTEM_FILE_SEPARATOR
+				+ user.getUuid() + "." + Constants.PRESENCE_FILE_EXTENSION;
+		new File(filePath).delete();
 	}
 }

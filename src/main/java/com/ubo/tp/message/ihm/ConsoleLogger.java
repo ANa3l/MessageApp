@@ -1,14 +1,31 @@
 package main.java.com.ubo.tp.message.ihm;
 
+import java.util.UUID;
+
 import main.java.com.ubo.tp.message.core.database.IDatabaseObserver;
+import main.java.com.ubo.tp.message.core.session.ISessionObserver;
 import main.java.com.ubo.tp.message.datamodel.Channel;
 import main.java.com.ubo.tp.message.datamodel.Message;
 import main.java.com.ubo.tp.message.datamodel.User;
 
 /**
- * Logger console pour les événements de la base de données.
+ * Logger console pour les événements de la base de données et de la session.
  */
-public class ConsoleLogger implements IDatabaseObserver {
+public class ConsoleLogger implements IDatabaseObserver, ISessionObserver {
+
+    // === Événements Session ===
+
+    @Override
+    public void notifyLogin(User connectedUser) {
+        System.out.println("[SESSION] Connexion : " + connectedUser.getName() + " (@" + connectedUser.getUserTag() + ")");
+    }
+
+    @Override
+    public void notifyLogout() {
+        System.out.println("[SESSION] Déconnexion");
+    }
+
+    // === Événements Database ===
 
     @Override
     public void notifyMessageAdded(Message addedMessage) {
@@ -53,5 +70,15 @@ public class ConsoleLogger implements IDatabaseObserver {
     @Override
     public void notifyChannelModified(Channel modifiedChannel) {
         System.out.println("[DB] Canal modifié : " + modifiedChannel.getName());
+    }
+
+    @Override
+    public void notifyUserOnline(UUID userUuid) {
+        System.out.println("[DB] Utilisateur en ligne : " + userUuid);
+    }
+
+    @Override
+    public void notifyUserOffline(UUID userUuid) {
+        System.out.println("[DB] Utilisateur hors ligne : " + userUuid);
     }
 }

@@ -104,6 +104,21 @@ public class Channel extends AbstractMessageAppObject implements IMessageRecipie
 		return new ArrayList<User>(mUsers);
 	}
 
+	public void addUser(User user) {
+		mUsers.add(user);
+	}
+
+	public void removeUser(User user) {
+		mUsers.remove(user);
+	}
+
+	/**
+	 * @return true si le canal est prive.
+	 */
+	public boolean isPrivate() {
+		return mPrivate;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */

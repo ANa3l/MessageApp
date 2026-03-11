@@ -1,82 +1,81 @@
-package main.java.com.ubo.tp.message.ihm.login;
+package main.java.com.ubo.tp.message.ihm.register;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JOptionPane;
 
 import main.java.com.ubo.tp.message.core.DataManager;
 import main.java.com.ubo.tp.message.datamodel.User;
-import main.java.com.ubo.tp.message.ihm.MessageAppMainView;
 
 /**
- * Contrôleur du composant de création de compte.
+ * Controleur du composant de creation de compte.
+ * Gere la logique d'inscription et notifie les observers.
  */
 public class RegisterController {
-    
+
     private RegisterView mView;
     private DataManager mDataManager;
-    private MessageAppMainView mMainView;
-    
+    private List<IRegisterObserver> mObservers;
+
     /**
      * Constructeur.
      */
-    public RegisterController(RegisterView view, DataManager dataManager, MessageAppMainView mainView) {
+    public RegisterController(RegisterView view, DataManager dataManager) {
         this.mView = view;
         this.mDataManager = dataManager;
-        this.mMainView = mainView;
-        initListeners();
+        this.mObservers = new ArrayList<>();
     }
-    
+
     /**
-     * Initialisation des listeners.
-     */
-    private void initListeners() {
-        mView.addCreateListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleCreateAccount();
-            }
-        });
-        
-        mView.addBackListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mMainView.showLoginView();
-            }
-        });
-    }
-    
-    /**
-     * Gestion de la création de compte.
+     * Gestion de la creation de compte.
      * SRS-MAP-USR-001 : Enregistrement compte (nom, tag)
      * SRS-MAP-USR-002 : Tag et nom obligatoires
      * SRS-MAP-USR-003 : Tag unique
      */
-    private void handleCreateAccount() {
+    public void handleCreateAccount() {
         String tag = mView.getTagValue();
         String name = mView.getNameValue();
         String password = mView.getPasswordValue();
-        
+
         // SRS-MAP-USR-002 : Validation
         if (tag.isEmpty() || name.isEmpty()) {
             showError("Le tag et le nom sont obligatoires.");
             return;
         }
-        
-        // SRS-MAP-USR-003 : Unicité du tag
+
+        // SRS-MAP-USR-003 : Unicite du tag
         if (findUserByTag(tag) != null) {
-            showError("Ce tag existe déjà.");
+            showError("Ce tag existe deja.");
             return;
         }
-        
-        // Création de l'utilisateur
+
+        // Creation de l'utilisateur
         User newUser = new User(tag, password, name);
         mDataManager.sendUser(newUser);
-        
-        showInfo("Compte créé avec succès !");
+
+        showInfo("Compte cree avec succes !");
         mView.clearFields();
-        mMainView.showLoginView();
+
+        for (IRegisterObserver observer : mObservers) {
+            observer.notifyAccountCreated();
+        }
+    }
+
+    /**
+     * Gestion du retour a la connexion.
+     */
+    public void handleBackToLogin() {
+        for (IRegisterObserver observer : mObservers) {
+            observer.notifyBackToLogin();
+        }
+    }
+
+    /**
+     * Ajoute un observateur.
+     */
+    public void addObserver(IRegisterObserver observer) {
+        mObservers.add(observer);
     }
     
     /**

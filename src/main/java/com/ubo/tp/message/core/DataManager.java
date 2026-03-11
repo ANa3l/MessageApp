@@ -2,6 +2,7 @@ package main.java.com.ubo.tp.message.core;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import main.java.com.ubo.tp.message.core.database.EntityManager;
 import main.java.com.ubo.tp.message.core.database.IDatabase;
@@ -103,6 +104,15 @@ public class DataManager {
 	}
 
 	/**
+	 * Supprime un Utilisateur (supprime le fichier du repertoire d'echange).
+	 *
+	 * @param user
+	 */
+	public void deleteUser(User user) {
+		this.mEntityManager.deleteUserFile(user);
+	}
+
+	/**
 	 * Ecrit un Canal.
 	 *
 	 * @param channel
@@ -110,6 +120,17 @@ public class DataManager {
 	public void sendChannel(Channel channel) {
 		// Ecrit un canal
 		this.mEntityManager.writeChannelFile(channel);
+	}
+
+	public void deleteChannel(Channel channel) {
+		this.mEntityManager.deleteChannelFile(channel);
+	}
+
+	/**
+	 * Supprime un message (supprime le fichier du repertoire d'echange).
+	 */
+	public void deleteMessage(Message message) {
+		this.mEntityManager.deleteMessageFile(message);
 	}
 
 	/**
@@ -181,5 +202,26 @@ public class DataManager {
 		mWatchableDirectory = new WatchableDirectory(directoryPath);
 		mWatchableDirectory.initWatching();
 		mWatchableDirectory.addObserver(mEntityManager);
+	}
+
+	/**
+	 * Crée le fichier de présence de l'utilisateur connecté.
+	 */
+	public void sendPresence(User user) {
+		mEntityManager.writePresenceFile(user);
+	}
+
+	/**
+	 * Supprime le fichier de présence de l'utilisateur connecté.
+	 */
+	public void deletePresence(User user) {
+		mEntityManager.deletePresenceFile(user);
+	}
+
+	/**
+	 * Retourne les UUID des utilisateurs en ligne.
+	 */
+	public Set<UUID> getOnlineUsers() {
+		return mDatabase.getOnlineUsers();
 	}
 }
